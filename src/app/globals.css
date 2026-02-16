@@ -1,0 +1,17 @@
+@import "tailwindcss"; 
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --border: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.75rem;
+  }
+}
+
+body {
+  background-color: #fafafa; /* 淡淡的灰色背景，让白色卡片更突出 */
+}
