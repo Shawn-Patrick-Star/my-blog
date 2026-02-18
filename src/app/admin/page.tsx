@@ -1,13 +1,19 @@
 import Link from "next/link";
+import { logoutAction } from "@/app/login/action"; // 引入退出动作
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PenTool, Camera, LayoutDashboard } from "lucide-react"; // 确保安装了 lucide-react
+import { PenTool, Camera, LogOut } from "lucide-react"; // 确保安装了 lucide-react
 
 export default function AdminDashboard() {
   return (
     <div className="max-w-4xl mx-auto py-20 px-4">
       <h1 className="text-3xl font-bold mb-2">控制台</h1>
       <p className="text-zinc-500 mb-8">欢迎回来，这里是你的数字花园指挥中心。</p>
-
+      <form action={logoutAction}>
+        <button className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 px-4 py-2 rounded-md transition-colors">
+          <LogOut size={16} />
+          退出登录
+        </button>
+      </form>
       <div className="grid md:grid-cols-2 gap-6">
         {/* 写文章入口 */}
         <Link href="/admin/write">

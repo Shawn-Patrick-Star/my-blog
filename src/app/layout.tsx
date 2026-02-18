@@ -28,6 +28,7 @@ export default function RootLayout({
               <Link href="/" className="hover:text-zinc-900 transition-colors">动态</Link>
               <Link href="/blog" className="hover:text-zinc-900 transition-colors">笔记</Link>
               <Link href="/admin" className="hover:text-zinc-900 transition-colors">后台</Link>
+              <Link href="/about" className="hover:text-zinc-900 transition-colors">关于</Link>
             </div>
           </div>
         </nav>
