@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/login/action"; // 引入退出动作
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PenTool, Camera, LogOut } from "lucide-react"; // 确保安装了 lucide-react
+import { Settings, PenTool, Camera, LogOut } from "lucide-react";
 
 export default function AdminDashboard() {
   return (
@@ -40,6 +40,20 @@ export default function AdminDashboard() {
               <CardTitle>发生活瞬间</CardTitle>
               <CardDescription>
                 类似朋友圈，支持多图上传，记录生活碎片。
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/admin/settings">
+          <Card className="hover:bg-zinc-50 transition-colors cursor-pointer h-full border-zinc-200">
+            <CardHeader>
+              <div className="w-10 h-10 bg-zinc-600 text-white rounded-lg flex items-center justify-center mb-4">
+                <Settings size={20} />
+              </div>
+              <CardTitle>网站设置</CardTitle>
+              <CardDescription>
+                装修你的门面，更换首页背景图和标题。
               </CardDescription>
             </CardHeader>
           </Card>

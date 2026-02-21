@@ -1,82 +1,94 @@
 import { supabase } from "@/lib/supabase";
-import { MomentCard } from "@/components/moment-card"; // 确保路径对
-import Link from "next/link";
-import { ArrowRight, BookOpen } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { format } from "date-fns";
+import { HeroSection } from "@/components/hero-section";
+import { BlogCard } from "@/components/blog-card";
+import { MomentCard } from "@/components/moment-card"; // 确保路径正确
+import { SearchInput } from "@/components/search-input";
+import { cookies } from "next/headers";
 
-export const revalidate = 0;
+export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  
+  const { q } = await searchParams;
+  const query = q || "";
 
-export default async function Home() {
-  // 并行获取数据：最新的1篇笔记 + 最新的动态
-  const [postsResponse, momentsResponse] = await Promise.all([
-    supabase.from("posts").select("*").eq("is_published", true).order("created_at", { ascending: false }).limit(1).single(),
-    supabase.from("moments").select("*").order("created_at", { ascending: false }),
+  // 检查是否有管理员 Cookie
+  const cookieStore = await cookies();
+  const isAdmin = cookieStore.get("admin_session")?.value === "true";
+
+  // 获取首页大图配置
+  const { data: config } = await supabase.from("site_config").select("value").eq("key", "hero_image").single();
+  const heroImage = config?.value || "";
+
+  const { data: titleConfig } = await supabase.from("site_config").select("value").eq("key", "site_title").single();
+  const siteTitle = titleConfig?.value || "Shawn's BLOG"; // 默认值
+
+  // 构建查询 (支持搜索)
+  let postQuery = supabase.from("posts").select("*").eq("is_published", true).order("created_at", { ascending: false });
+  let momentQuery = supabase.from("moments").select("*").order("created_at", { ascending: false });
+
+  if (query) {
+    postQuery = postQuery.ilike("title", `%${query}%`);
+    momentQuery = momentQuery.ilike("content", `%${query}%`);
+  }
+
+  const [{ data: posts }, { data: moments }] = await Promise.all([
+    postQuery.limit(5), // 只取最新的5篇
+    momentQuery.limit(10)
   ]);
 
-  const latestPost = postsResponse.data;
-  const moments = momentsResponse.data;
-
   return (
-    <main className="min-h-screen bg-zinc-50/50 py-12 px-4">
-      <div className="max-w-2xl mx-auto flex flex-col gap-12">
+    <main className="min-h-screen py-8 px-4 md:px-8">
+      
+
+      
+      <div className="max-w-4xl mx-auto space-y-12">
         
-        {/* 1. 个人简介区域 */}
-        <section className="text-center space-y-4 mb-4">
-          <div className="w-20 h-20 bg-zinc-200 rounded-full mx-auto overflow-hidden">
-            {/* 可以在这里放 <img src="/avatar.jpg" /> */}
-            <div className="w-full h-full flex items-center justify-center text-zinc-400 text-2xl">Me</div>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">你的名字</h1>
-            <p className="text-zinc-500 mt-2">全栈开发者 / 摄影爱好者 / 终身学习者</p>
+        {/* 1. Hero 区域 + 搜索框 */}
+        <section>
+          <HeroSection 
+            initialImage={heroImage} 
+            title={siteTitle} 
+            isAdmin={isAdmin} 
+          />
+        
+        <div className="max-w-md mx-auto -mt-16 relative z-10 px-4">
+            <SearchInput defaultValue={query} />
+        </div>
+      </section>
+
+        {/* 2. 内容双栏布局 (左边笔记，右边动态，或者上下排列) */}
+        {/* 用户要求“对齐”，我们采用单列流，或者上下的清晰分层 */}
+        
+        {/* 最新笔记模块 */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-zinc-800">
+            <span className="w-2 h-8 bg-amber-400 rounded-full"></span>
+            最新笔记
+          </h2>
+          <div className="flex flex-col gap-4">
+            {posts?.map((post) => (
+              <BlogCard key={post.id} post={post} />
+            ))}
+            {posts?.length === 0 && <p className="text-zinc-400 text-center">未找到相关笔记</p>}
           </div>
         </section>
 
-        {/* 2. 最新文章 (如果有的话) */}
-        {latestPost && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <BookOpen className="w-4 h-4" /> 最新笔记
-              </h2>
-              <Link href="/blog" className="text-sm text-blue-600 hover:underline flex items-center">
-                全部文章 <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
-            </div>
-            
-            <Link href={`/blog/${latestPost.slug}`}>
-              <Card className="p-6 hover:shadow-md transition-all border-zinc-200 group">
-                <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 transition-colors">
-                  {latestPost.title}
-                </h3>
-                <p className="text-zinc-500 line-clamp-2 mb-4 text-sm leading-relaxed">
-                  {latestPost.excerpt || "点击阅读全文..."}
-                </p>
-                <div className="text-xs text-zinc-400">
-                  {format(new Date(latestPost.created_at), "yyyy-MM-dd")}
-                </div>
-              </Card>
-            </Link>
-          </section>
-        )}
-
-        {/* 3. 动态流 */}
-        <section className="flex flex-col items-center gap-6">
-          <div className="w-full flex justify-between items-center border-b border-zinc-200 pb-2">
-            <h2 className="text-lg font-bold">碎片动态</h2>
-          </div>
-
-          <div className="w-full space-y-6">
+        {/* 碎片动态模块 */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-zinc-800">
+             <span className="w-2 h-8 bg-blue-400 rounded-full"></span>
+             碎片动态
+          </h2>
+          {/* 使用 Grid 布局让动态卡片也整齐 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {moments?.map((item) => (
-              <div key={item.id} className="flex justify-center">
-                <MomentCard 
-                  content={item.content}
-                  createdAt={item.created_at}
-                  images={item.images}
-                />
-              </div>
+               <MomentCard 
+                 key={item.id} 
+                 content={item.content} 
+                 createdAt={item.created_at} 
+                 images={item.images} 
+               />
             ))}
+            {moments?.length === 0 && <p className="text-zinc-400 text-center col-span-2">未找到相关动态</p>}
           </div>
         </section>
 

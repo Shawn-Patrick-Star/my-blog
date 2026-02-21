@@ -33,6 +33,7 @@ export default function WritePage() {
             <label className="text-sm font-medium">标题</label>
             <Input name="title" placeholder="例如：我的第一篇 Next.js 笔记" required />
           </div>
+          
           <div className="space-y-2">
             <label className="text-sm font-medium">Slug (URL路径)</label>
             <Input name="slug" placeholder="例如：my-first-note" required />
@@ -45,12 +46,24 @@ export default function WritePage() {
           <Input name="excerpt" placeholder="一句话描述这篇文章..." />
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">标签 (用逗号分隔)</label>
+            <Input name="tags" placeholder="React, 学习笔记, 生活" />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">封面图 (可选)</label>
+            <Input name="cover" type="file" accept="image/*" className="cursor-pointer" />
+          </div>
+        </div>
+
         <div className="space-y-2">
           <label className="text-sm font-medium">Markdown 内容</label>
           <Textarea 
             name="content" 
             placeholder="# Hello World" 
-            className="min-h-[400px] font-mono" 
+            className="min-h-100 font-mono" 
             required 
           />
         </div>
