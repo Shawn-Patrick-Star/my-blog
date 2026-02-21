@@ -20,19 +20,19 @@ export default function AboutPage() {
         <div className="border-t border-amber-100 pt-8">
           <h2 className="text-xl font-bold mb-6 text-zinc-800">关注我</h2>
           <div className="flex gap-4">
-            <a href="https://github.com/yourname" target="_blank" rel="noreferrer">
+            <a href="https://github.com/Shawn-Patrick-Star" target="_blank" rel="noreferrer">
               <Button variant="outline" className="gap-2 hover:bg-zinc-100 hover:text-black">
                 <Github size={18} /> GitHub
               </Button>
             </a>
             
-            <a href="https://zhihu.com/people/yourname" target="_blank" rel="noreferrer">
+            <a href="https://www.zhihu.com/people/john-15-38-91" target="_blank" rel="noreferrer">
               <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white border-none">
                 知乎
               </Button>
             </a>
 
-            <a href="https://bilibili.com/" target="_blank" rel="noreferrer">
+            <a href="https://space.bilibili.com/440335758?spm_id_from=333.1007.0.0" target="_blank" rel="noreferrer">
                <Button className="gap-2 bg-pink-400 hover:bg-pink-500 text-white border-none">
                 <BilibiliIcon /> Bilibili
               </Button>

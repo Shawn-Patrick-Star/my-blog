@@ -1,6 +1,7 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 export async function createMoment(formData: FormData) {
@@ -102,34 +103,86 @@ export async function createPost(formData: FormData) {
 }
 
 export async function updateSiteConfig(formData: FormData) {
+  // 1. 尝试获取 URL 字符串 (来自方案二：客户端直传)
+  const heroImageUrl = formData.get("hero_image_url") as string;
+  // 2. 尝试获取文件对象 (兼容方案一：服务端上传，如果以后要用)
   const heroImageFile = formData.get("hero_image") as File;
+  
   const siteTitle = formData.get("site_title") as string;
 
-  // 1. 如果上传了新图片，处理上传
-  if (heroImageFile && heroImageFile.size > 0) {
+  // 逻辑分支 A：如果是客户端传来的 URL，直接存库（这是最快的）
+  if (heroImageUrl) {
+    await supabase
+      .from("site_config")
+      .upsert({ key: "hero_image", value: heroImageUrl }, { onConflict: "key" });
+  } 
+  // 逻辑分支 B：如果是文件，说明走了服务端中转（备用逻辑）
+  else if (heroImageFile && heroImageFile.size > 0) {
     const fileName = `hero-${Date.now()}-${heroImageFile.name}`;
     const { error: uploadError } = await supabase.storage
       .from("public-images")
       .upload(fileName, heroImageFile);
     
-    if (uploadError) throw new Error("图片上传失败: " + uploadError.message);
-
-    const { data } = supabase.storage.from("public-images").getPublicUrl(fileName);
-    const publicUrl = data.publicUrl;
-
-    // 更新数据库中的 hero_image
-    await supabase
-      .from("site_config")
-      .upsert({ key: "hero_image", value: publicUrl }, { onConflict: "key" });
+    if (!uploadError) {
+      const { data } = supabase.storage.from("public-images").getPublicUrl(fileName);
+      await supabase
+        .from("site_config")
+        .upsert({ key: "hero_image", value: data.publicUrl }, { onConflict: "key" });
+    }
   }
 
-  // 2. 如果修改了标题 (可选功能，顺手加上)
+  // 处理标题
   if (siteTitle) {
     await supabase
       .from("site_config")
       .upsert({ key: "site_title", value: siteTitle }, { onConflict: "key" });
   }
 
-  // 3. 刷新首页
   revalidatePath("/");
+}
+
+// 1. 删除文章
+export async function deletePost(id: string) {
+  const { error } = await supabase.from("posts").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/"); // 刷新首页
+  revalidatePath("/blog"); // 刷新列表页
+}
+
+// 2. 删除动态
+export async function deleteMoment(id: string) {
+  const { error } = await supabase.from("moments").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+}
+
+// 3. 更新文章 (用于编辑功能)
+export async function updatePost(formData: FormData) {
+  const id = formData.get("id") as string;
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const excerpt = formData.get("excerpt") as string;
+  const tagsStr = formData.get("tags") as string;
+  
+  // 处理标签
+  const tags = tagsStr ? tagsStr.split(",").filter(Boolean) : [];
+  // 重新计算字数
+  const wordCount = content.length;
+
+  const { error } = await supabase
+    .from("posts")
+    .update({
+      title,
+      content,
+      excerpt,
+      tags,
+      word_count: wordCount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  
+  // 更新成功后重定向
+  redirect(`/blog/${formData.get("slug")}`); 
 }

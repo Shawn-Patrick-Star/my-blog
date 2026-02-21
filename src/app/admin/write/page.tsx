@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createPost } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { TagInput } from "@/components/tag-input"; // 引入新组件
+
 
 export default function WritePage() {
   const [isPending, setIsPending] = useState(false);
@@ -48,8 +50,8 @@ export default function WritePage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">标签 (用逗号分隔)</label>
-            <Input name="tags" placeholder="React, 学习笔记, 生活" />
+            <label className="text-sm font-medium">标签</label>
+            <TagInput name="tags" />
           </div>
           
           <div className="space-y-2">
