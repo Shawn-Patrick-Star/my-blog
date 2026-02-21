@@ -9,7 +9,7 @@
 @layer base {
   :root {
     /* 暖黄色调色板 */
-    --background: 48 100% 96%; /* 极浅的暖黄 #fefce8 */
+    --background: 48 100% 80%; /* 极浅的暖黄 #fefce8 */
     --foreground: 20 14.3% 4.1%;
     
     /* 卡片颜色：稍微深一点的奶油色，或者纯白带暖色阴影 */

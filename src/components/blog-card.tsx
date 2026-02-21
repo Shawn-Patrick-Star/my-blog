@@ -1,4 +1,4 @@
-"use client"; // 👈 必须加上这一行！
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -13,15 +13,12 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ post, isAdmin }: BlogCardProps) {
-  
   const handleDelete = async (e: React.MouseEvent) => {
-    e.preventDefault(); // 阻止点击卡片跳转
-    e.stopPropagation(); // 防止事件冒泡
-    
+    e.preventDefault();
+    e.stopPropagation();
     if (confirm(`确定要删除文章《${post.title}》吗？`)) {
       try {
         await deletePost(post.id);
-        // 这里不需要 alert，因为 actions 里有 revalidatePath，页面会自动刷新
       } catch (err: any) {
         alert("删除失败: " + err.message);
       }
@@ -31,27 +28,27 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
   return (
     <div className="group relative h-full">
       <Link href={`/blog/${post.slug}`} className="block h-full">
-        <Card className="overflow-hidden hover:shadow-md transition-all duration-300 bg-[#fffef9] border-amber-100/50 h-full flex flex-col">
+        <Card className="overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-[#fffef9] border-amber-100/50 h-full flex flex-col">
           <div className="flex flex-col md:flex-row h-full">
             
-            {/* 左侧文字区 */}
-            <div className="flex-1 p-6 flex flex-col justify-between">
+            {/* 左侧文字内容区 */}
+            <div className="flex-1 p-6 flex flex-col justify-between order-2 md:order-1">
               <div>
-                <div className="flex items-center gap-3 text-xs text-amber-600/70 mb-2">
-                  <time>{format(new Date(post.created_at), "yyyy-MM-dd")}</time>
+                <div className="flex items-center gap-3 text-xs text-amber-600/70 mb-3">
+                  <time className="font-medium">{format(new Date(post.created_at), "yyyy-MM-dd")}</time>
                   {post.word_count > 0 && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 opacity-80">
                       <FileText size={10} /> {post.word_count} 字
                     </span>
                   )}
                 </div>
                 
-                <h3 className="text-xl font-bold text-zinc-800 mb-3 group-hover:text-amber-600 transition-colors">
+                <h3 className="text-xl font-bold text-zinc-800 mb-3 group-hover:text-amber-600 transition-colors line-clamp-1">
                   {post.title}
                 </h3>
                 
-                <p className="text-zinc-500 text-sm line-clamp-2 leading-relaxed mb-4">
-                  {post.excerpt || "暂无简介..."}
+                <p className="text-zinc-500 text-sm line-clamp-2 leading-relaxed mb-6">
+                  {post.excerpt || "点击阅读全文以了解更多精彩内容..."}
                 </p>
               </div>
 
@@ -59,22 +56,23 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-auto">
                   {post.tags.map((tag: string) => (
-                    <span key={tag} className="px-2 py-1 bg-amber-50 text-amber-600/80 text-xs rounded-md flex items-center gap-1 border border-amber-100">
-                      <Hash size={10} /> {tag}
+                    <span key={tag} className="px-2 py-0.5 bg-zinc-100 text-zinc-500 text-[10px] uppercase tracking-wider rounded font-bold border border-zinc-200/50">
+                      {tag}
                     </span>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* 右侧图片区 */}
+            {/* 右侧图片区：修复了宽度塌陷问题 */}
             {post.cover_image && (
-              <div className="relative w-full md:w-48 h-48 md:h-auto shrink-0">
+              <div className="relative w-full md:w-48 aspect-square shrink-0 order-1 md:order-2 border-b md:border-b-0 md:border-l border-amber-100/30 overflow-hidden bg-zinc-100">
                 <Image
                   src={post.cover_image}
                   alt={post.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
+                  sizes="(max-width: 768px) 100vw, 200px"
                 />
               </div>
             )}
@@ -82,23 +80,19 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
         </Card>
       </Link>
 
-      {/* 管理员按钮组 (绝对定位悬浮) */}
+      {/* 管理员按钮 */}
       {isAdmin && (
-        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-          {/* 编辑按钮：直接跳转 */}
+        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
           <Link href={`/admin/write/${post.id}`}>
-            <div className="p-2 bg-white/90 text-blue-600 rounded-full shadow-sm hover:bg-blue-50 border border-zinc-200 cursor-pointer">
-              <Edit size={16} />
+            <div className="p-2 bg-white/90 text-blue-600 rounded-full shadow-lg hover:bg-blue-600 hover:text-white border border-zinc-200 transition-all">
+              <Edit size={14} />
             </div>
           </Link>
-          
-          {/* 删除按钮：触发点击事件 */}
           <button 
             onClick={handleDelete}
-            className="p-2 bg-white/90 text-red-600 rounded-full shadow-sm hover:bg-red-50 border border-zinc-200 cursor-pointer" 
-            title="删除"
+            className="p-2 bg-white/90 text-red-600 rounded-full shadow-lg hover:bg-red-600 hover:text-white border border-zinc-200 transition-all"
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         </div>
       )}

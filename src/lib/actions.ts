@@ -56,19 +56,28 @@ export async function createMoment(formData: FormData) {
   revalidatePath("/");
 }
 
+export async function deleteMoment(id: string) {
+  const { error } = await supabase.from("moments").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+}
+
 export async function createPost(formData: FormData) {
   const title = formData.get("title") as string;
-  const slug = formData.get("slug") as string;
   const content = formData.get("content") as string;
   const excerpt = formData.get("excerpt") as string;
   const tagsStr = formData.get("tags") as string; // 获取标签字符串
   const coverFile = formData.get("cover") as File; // 获取封面图文件
 
+  let slug = formData.get("slug") as string;
+  if (!slug) {
+    slug = `note-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  }
+
   let coverImageUrl = null;
 
-  // 1. 上传封面图 (如果有)
   if (coverFile && coverFile.size > 0) {
-    const fileName = `cover-${Date.now()}-${coverFile.name}`;
+    const fileName = `cover-${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
     const { error: uploadError } = await supabase.storage
       .from("public-images")
       .upload(fileName, coverFile);
@@ -79,10 +88,7 @@ export async function createPost(formData: FormData) {
     }
   }
 
-  // 2. 处理标签 (逗号分隔转数组)
   const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [];
-
-  // 3. 计算字数 (简单计算)
   const wordCount = content.length;
 
   const { error } = await supabase.from("posts").insert([
@@ -101,6 +107,62 @@ export async function createPost(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/blog");
 }
+
+
+
+// 更新文章 (用于编辑功能)
+export async function updatePost(formData: FormData) {
+  const id = formData.get("id") as string;
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const excerpt = formData.get("excerpt") as string;
+  const tagsStr = formData.get("tags") as string;
+  const coverFile = formData.get("cover") as File; // 获取可能存在的图片文件
+
+  let coverImageUrl = undefined; // 初始设为 undefined，表示如果不上传新图就不更新这个字段
+
+  // 如果上传了新封面图
+  if (coverFile && coverFile.size > 0) {
+    const fileName = `cover-${Date.now()}-${coverFile.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
+    const { error: uploadError } = await supabase.storage
+      .from("public-images")
+      .upload(fileName, coverFile);
+    
+    if (!uploadError) {
+      const { data } = supabase.storage.from("public-images").getPublicUrl(fileName);
+      coverImageUrl = data.publicUrl;
+    }
+  }
+
+  const tags = tagsStr ? tagsStr.split(",").filter(Boolean) : [];
+  const wordCount = content.length;
+
+  const updateData: any = {
+    title,
+    content,
+    excerpt,
+    tags,
+    word_count: wordCount,
+    updated_at: new Date().toISOString(),
+  };
+
+  // 如果有新图片，才加入更新对象
+  if (coverImageUrl) {
+    updateData.cover_image = coverImageUrl;
+  }
+
+  const { error } = await supabase
+    .from("posts")
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  
+  revalidatePath("/");
+  revalidatePath("/blog");
+  redirect(`/blog/${formData.get("slug")}`);
+}
+
 
 export async function updateSiteConfig(formData: FormData) {
   // 1. 尝试获取 URL 字符串 (来自方案二：客户端直传)
@@ -147,42 +209,4 @@ export async function deletePost(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/"); // 刷新首页
   revalidatePath("/blog"); // 刷新列表页
-}
-
-// 2. 删除动态
-export async function deleteMoment(id: string) {
-  const { error } = await supabase.from("moments").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/");
-}
-
-// 3. 更新文章 (用于编辑功能)
-export async function updatePost(formData: FormData) {
-  const id = formData.get("id") as string;
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
-  const excerpt = formData.get("excerpt") as string;
-  const tagsStr = formData.get("tags") as string;
-  
-  // 处理标签
-  const tags = tagsStr ? tagsStr.split(",").filter(Boolean) : [];
-  // 重新计算字数
-  const wordCount = content.length;
-
-  const { error } = await supabase
-    .from("posts")
-    .update({
-      title,
-      content,
-      excerpt,
-      tags,
-      word_count: wordCount,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(error.message);
-  
-  // 更新成功后重定向
-  redirect(`/blog/${formData.get("slug")}`); 
 }
