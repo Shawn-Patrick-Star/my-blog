@@ -89,36 +89,18 @@ export function PostEditor({
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
-      {/* 顶部工具栏 */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            type="button"
-            className="text-zinc-400 hover:text-amber-600"
-          >
-            <ArrowLeft size={20} />
-          </Button>
-          <h1 className="text-2xl font-bold text-zinc-800">{pageTitle}</h1>
-        </div>
+      {/* 顶部标题栏 */}
+      <div className="flex items-center gap-4 mb-8">
         <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
           type="button"
-          variant="outline"
-          className="text-amber-600 border-amber-200 bg-amber-50/30 hover:bg-amber-50"
-          onClick={() => setIsPreview(!isPreview)}
+          className="text-zinc-400 hover:text-amber-600"
         >
-          {isPreview ? (
-            <>
-              <Edit3 size={16} className="mr-2" /> 返回编辑
-            </>
-          ) : (
-            <>
-              <Eye size={16} className="mr-2" /> 预览效果
-            </>
-          )}
+          <ArrowLeft size={20} />
         </Button>
+        <h1 className="text-2xl font-bold text-zinc-800">{pageTitle}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -129,81 +111,78 @@ export function PostEditor({
           <input type="hidden" name="slug" value={initialData.slug} />
         )}
 
-        {isPreview ? (
-          <div className="p-8 bg-[#fffef9] border border-amber-100 rounded-2xl shadow-sm min-h-125 animate-in fade-in duration-300">
-            <h1 className="text-4xl font-bold mb-8 text-zinc-900 border-b pb-4 border-zinc-100">
-              {title || "未命名文章"}
-            </h1>
-            <MarkdownRenderer content={content} />
+        {/* 标题、摘要、标签、封面 —— 始终显示 */}
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-700">
+              文章标题
+            </label>
+            <Input
+              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="在此输入标题..."
+              className="text-lg py-6 bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
+              required
+            />
           </div>
-        ) : (
-          <div className="space-y-6 animate-in fade-in duration-300">
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-700">
+              摘要 (SEO / 列表展示)
+            </label>
+            <Input
+              name="excerpt"
+              value={excerpt}
+              onChange={(e) => setExcerpt(e.target.value)}
+              placeholder="简单介绍一下这篇文章..."
+              className="border-amber-100 focus-visible:ring-amber-200"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-700">
-                文章标题
+                标签 (按回车添加)
               </label>
-              <Input
-                name="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="在此输入标题..."
-                className="text-lg py-6 bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
-                required
+              <TagInput
+                name="tags"
+                defaultTags={initialData?.tags || []}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">
-                摘要 (SEO / 列表展示)
+              <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+                <ImageIcon size={16} className="text-amber-500" /> 封面图片
               </label>
               <Input
-                name="excerpt"
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="简单介绍一下这篇文章..."
-                className="border-amber-100 focus-visible:ring-amber-200"
+                name="cover"
+                type="file"
+                accept="image/*"
+                className="cursor-pointer border-amber-100"
               />
+              {initialData?.cover_image && (
+                <div className="mt-2 relative w-32 h-20 rounded border border-amber-100 overflow-hidden opacity-40">
+                  <Image
+                    src={initialData.cover_image}
+                    alt="current"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
             </div>
+          </div>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700">
-                  标签 (按回车添加)
-                </label>
-                <TagInput
-                  name="tags"
-                  defaultTags={initialData?.tags || []}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
-                  <ImageIcon size={16} className="text-amber-500" /> 封面图片
-                </label>
-                <Input
-                  name="cover"
-                  type="file"
-                  accept="image/*"
-                  className="cursor-pointer border-amber-100"
-                />
-                {initialData?.cover_image && (
-                  <div className="mt-2 relative w-32 h-20 rounded border border-amber-100 overflow-hidden opacity-40">
-                    <Image
-                      src={initialData.cover_image}
-                      alt="current"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-zinc-700">
-                  正文内容 (Markdown)
-                </label>
+        {/* 正文区域 —— 编辑 / 预览切换 */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-zinc-700">
+              正文内容 (Markdown)
+            </label>
+            <div className="flex items-center gap-2">
+              {!isPreview && (
                 <label className="text-xs bg-white border border-amber-100 hover:bg-amber-50 px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-amber-600 shadow-sm">
                   <Upload size={12} /> 插入图片
                   <input
@@ -213,18 +192,42 @@ export function PostEditor({
                     accept="image/*"
                   />
                 </label>
-              </div>
-              <Textarea
-                name="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="# 开始创作吧..."
-                className="min-h-125 font-mono leading-relaxed bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
-                required
-              />
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-amber-600 border-amber-200 bg-amber-50/30 hover:bg-amber-50"
+                onClick={() => setIsPreview(!isPreview)}
+              >
+                {isPreview ? (
+                  <>
+                    <Edit3 size={14} className="mr-1.5" /> 返回编辑
+                  </>
+                ) : (
+                  <>
+                    <Eye size={14} className="mr-1.5" /> 预览正文
+                  </>
+                )}
+              </Button>
             </div>
           </div>
-        )}
+
+          {isPreview ? (
+            <div className="p-6 bg-[#fffef9] border border-amber-100 rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">
+              <MarkdownRenderer content={content} />
+            </div>
+          ) : (
+            <Textarea
+              name="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="# 开始创作吧..."
+              className="min-h-125 font-mono leading-relaxed bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
+              required
+            />
+          )}
+        </div>
 
         <div className="flex gap-4 pt-6 border-t border-amber-100">
           <Button
