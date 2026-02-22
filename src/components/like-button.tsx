@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { likePost, likeMoment } from "@/lib/actions/interaction";
@@ -25,6 +25,17 @@ export function LikeButton({
     const [isLiked, setIsLiked] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    useEffect(() => {
+        try {
+            const likedItems = JSON.parse(localStorage.getItem("liked_items") || "[]");
+            if (likedItems.includes(targetId)) {
+                setIsLiked(true);
+            }
+        } catch (e) {
+            console.error("Failed to parse liked_items from localStorage", e);
+        }
+    }, [targetId]);
+
     const handleLike = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -36,6 +47,13 @@ export function LikeButton({
         setIsLiked(true);
 
         try {
+            const currentLiked = JSON.parse(localStorage.getItem("liked_items") || "[]");
+            localStorage.setItem("liked_items", JSON.stringify([...currentLiked, targetId]));
+        } catch (e) {
+            console.error("Failed to save to localStorage", e);
+        }
+
+        try {
             if (targetType === "post") {
                 await likePost(targetId);
             } else {
@@ -45,6 +63,12 @@ export function LikeButton({
             // Revert optimistic update
             setLikes((prev) => prev - 1);
             setIsLiked(false);
+            try {
+                const currentLiked = JSON.parse(localStorage.getItem("liked_items") || "[]");
+                localStorage.setItem("liked_items", JSON.stringify(currentLiked.filter((id: string) => id !== targetId)));
+            } catch (e) {
+                console.error("Failed to update localStorage on err", e);
+            }
             console.error("点赞失败", err);
         } finally {
             setIsLoading(false);

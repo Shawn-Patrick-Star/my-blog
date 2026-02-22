@@ -9,6 +9,7 @@ import { MarkdownRenderer } from "@/components/markdown-renderer";
 import Link from "next/link";
 import { LikeButton } from "@/components/like-button";
 import { CommentSection } from "@/components/comment-section";
+import { ShareButton } from "@/components/share-button";
 
 export const revalidate = 0;
 
@@ -101,21 +102,22 @@ export default async function BlogPost({
         <MarkdownRenderer content={post.content} />
       </div>
 
-      {/* 点赞按钮 */}
-      <div className="flex justify-center mb-10 pb-10 border-b border-amber-100">
-        <LikeButton
-          targetId={post.id}
-          targetType="post"
-          initialLikes={post.likes || 0}
-        />
-      </div>
-
-      {/* 评论区 */}
+      {/* 评论区与底部交互按钮 */}
       <CommentSection
         targetId={post.id}
         targetType="post"
         initialComments={comments || []}
         isAdmin={isAdmin}
+        actionButtons={(
+          <>
+            <LikeButton
+              targetId={post.id}
+              targetType="post"
+              initialLikes={post.likes || 0}
+            />
+            <ShareButton title={post.title} />
+          </>
+        )}
       />
     </article>
   );
