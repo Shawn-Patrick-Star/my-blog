@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    unoptimized: true, 
     remotePatterns: [
       // 1. 原有的 Supabase 配置 (请保留)
       {

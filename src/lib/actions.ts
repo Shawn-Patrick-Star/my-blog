@@ -6,45 +6,19 @@ import { revalidatePath } from "next/cache";
 
 export async function createMoment(formData: FormData) {
   const content = formData.get("content") as string;
-  const files = formData.getAll("images") as File[];
+  // 获取前端传来的图片 URL 字符串（用逗号分隔）
+  const imageUrlsString = formData.get("image_urls") as string;
+  
+  const imageUrls = imageUrlsString ? imageUrlsString.split(",") : [];
 
-  if (!content && files.length === 0) return;
+  if (!content && imageUrls.length === 0) return;
 
-  const imageUrls: string[] = [];
-
-  // 1. 处理图片上传
-  for (const file of files) {
-    if (file.size > 0) {
-      // 生成唯一文件名，防止重名覆盖
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from("public-images") // 还记得第一阶段建的桶吗？
-        .upload(filePath, file);
-
-      if (error) {
-        console.error("上传图片失败:", error);
-        continue;
-      }
-
-      // 获取图片的公开访问链接
-      const { data: { publicUrl } } = supabase.storage
-        .from("public-images")
-        .getPublicUrl(filePath);
-
-      imageUrls.push(publicUrl);
-    }
-  }
-
-  // 2. 将动态数据写入数据库
   const { error } = await supabase
     .from("moments")
     .insert([
       {
         content,
-        images: imageUrls,
+        images: imageUrls, // 存入 URL 数组
       },
     ]);
 
@@ -52,8 +26,25 @@ export async function createMoment(formData: FormData) {
     throw new Error("发布失败：" + error.message);
   }
 
-  // 3. 告诉 Next.js 首页数据已过时，需要刷新
   revalidatePath("/");
+}
+
+export async function updateMoment(formData: FormData) {
+  const id = formData.get("id") as string;
+  const content = formData.get("content") as string;
+  const existingImages = (formData.get("existing_images") as string).split(",").filter(Boolean);
+  const newImageUrls = (formData.get("new_image_urls") as string).split(",").filter(Boolean);
+
+  const finalImages = [...existingImages, ...newImageUrls];
+
+  const { error } = await supabase
+    .from("moments")
+    .update({ content, images: finalImages })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  return { success: true };
 }
 
 export async function deleteMoment(id: string) {
@@ -105,7 +96,9 @@ export async function createPost(formData: FormData) {
   ]);
 
   if (error) throw new Error(error.message);
+  revalidatePath("/");
   revalidatePath("/blog");
+  return { success: true, slug: slug }; // 🔴 返回 slug 用于跳转
 }
 
 
@@ -118,6 +111,7 @@ export async function updatePost(formData: FormData) {
   const excerpt = formData.get("excerpt") as string;
   const tagsStr = formData.get("tags") as string;
   const coverFile = formData.get("cover") as File; // 获取可能存在的图片文件
+  const slug = formData.get("slug") as string; // 确保获取了 slug 用于前端跳转
 
   let coverImageUrl = undefined; // 初始设为 undefined，表示如果不上传新图就不更新这个字段
 
@@ -160,7 +154,8 @@ export async function updatePost(formData: FormData) {
   
   revalidatePath("/");
   revalidatePath("/blog");
-  redirect(`/blog/${formData.get("slug")}`);
+  revalidatePath(`/blog/${slug}`);
+  return { success: true, slug: slug }; // 🔴 返回 slug 用于跳转
 }
 
 

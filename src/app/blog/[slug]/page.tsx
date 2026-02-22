@@ -1,41 +1,18 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
-import ReactMarkdown, { Components } from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import { format } from "date-fns";
 import { cookies } from "next/headers"; 
 import { Hash, FileText } from "lucide-react"; 
 import { PostAdminActions } from "@/components/post-admin-actions"; 
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 
 // 🔴 关键修复：强制 Next.js 每次都去数据库拿最新数据，不要使用旧缓存！
 export const revalidate = 0;
 
-// --- Markdown 样式组件 ---
-const markdownComponents: Components = {
-  h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mt-8 mb-4 text-zinc-900 border-b pb-2 border-zinc-100" {...props} />,
-  h2: ({ node, ...props }) => <h2 className="text-2xl font-semibold mt-8 mb-4 text-zinc-800" {...props} />,
-  h3: ({ node, ...props }) => <h3 className="text-xl font-medium mt-6 mb-3 text-zinc-800" {...props} />,
-  p: ({ node, ...props }) => <p className="leading-7 mb-4 text-zinc-600" {...props} />,
-  ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-zinc-600" {...props} />,
-  ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-zinc-600" {...props} />,
-  li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-amber-200 pl-4 py-1 my-4 italic text-zinc-500 bg-amber-50 rounded-r" {...props} />,
-  code: ({ node, className, children, ...props }) => {
-    const match = /language-(\w+)/.exec(className || "");
-    if (!match) return <code className="bg-amber-100/50 text-amber-600 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>;
-    return <code className={className} {...props}>{children}</code>;
-  },
-  a: ({ node, ...props }) => <a className="text-blue-600 hover:underline underline-offset-4 font-medium" {...props} />,
-  img: ({ node, ...props }) => <img className="rounded-lg border border-zinc-100 shadow-sm my-6 max-h-96 object-cover" {...props} alt={props.alt || ""} />,
-};
-
 // --- 页面主组件 ---
-export default async function BlogPost({ 
-  params 
-}: { 
-  params: Promise<{ slug: string }> 
-}) {
+export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+
   const { slug } = await params;
 
   // 1. 获取文章数据
@@ -91,25 +68,16 @@ export default async function BlogPost({
         )}
       </header>
 
-      {/* --- 封面图 --- */}
+      {/* 封面图 */}
       {post.cover_image && (
-        <div className="w-full h-64 md:h-96 relative rounded-2xl overflow-hidden mb-12 shadow-sm">
-          <img 
-            src={post.cover_image} 
-            alt="文章封面" 
-            className="object-cover w-full h-full"
-          />
+        <div className="w-full h-64 md:h-96 relative rounded-2xl overflow-hidden mb-12 shadow-sm border border-amber-100/50">
+          <img src={post.cover_image} className="object-cover w-full h-full" alt="cover" />
         </div>
       )}
 
-      {/* --- Markdown 正文 --- */}
+      {/* 🔴 使用通用渲染器，支持图片 */}
       <div className="pb-20">
-        <ReactMarkdown 
-          rehypePlugins={[rehypeHighlight]} 
-          components={markdownComponents}
-        >
-          {post.content}
-        </ReactMarkdown>
+        <MarkdownRenderer content={post.content} />
       </div>
     </article>
   );
