@@ -2,29 +2,63 @@
 
 @plugin "@tailwindcss/typography";
 @plugin "tailwindcss-animate";
+
 @theme {
   --font-sans: var(--font-inter);
 }
 
 @layer base {
   :root {
-    /* 暖黄色调色板 */
-    --background: 48 100% 80%; /* 极浅的暖黄 #fefce8 */
+    /* ── 暖黄主题色板 ── */
+    --background: 48 100% 80%;
     --foreground: 20 14.3% 4.1%;
-    
-    /* 卡片颜色：稍微深一点的奶油色，或者纯白带暖色阴影 */
-    --card: 48 50% 98%; /* #fffdf5 */
+
+    --card: 48 50% 98%;
     --card-foreground: 20 14.3% 4.1%;
-    
-    --border: 48 20% 88%; /* 浅黄褐色边框 */
+
+    --border: 48 20% 88%;
     --input: 48 20% 88%;
-    --primary: 38 92% 50%; /* 橙黄色按钮 */
+
+    --primary: 38 92% 50%;
     --primary-foreground: 60 9.1% 97.8%;
-    
+
+    --secondary: 48 30% 96%;
+    --secondary-foreground: 20 14.3% 25%;
+
+    --muted: 48 20% 95%;
+    --muted-foreground: 20 10% 45%;
+
+    --accent: 38 80% 94%;
+    --accent-foreground: 38 92% 30%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
     --radius: 0.75rem;
   }
 }
 
 body {
-  @apply bg-[#fdfbf6] text-zinc-800; /* 全局背景设为米暖色 */
+  @apply bg-[#fdfbf6] text-zinc-800;
+}
+
+/* ── 全局滚动条美化 ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4c5a9;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8a88a;
+}
+
+/* ── 选中文字高亮色 ── */
+::selection {
+  background-color: #fde68a;
+  color: #451a03;
 }

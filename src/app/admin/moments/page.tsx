@@ -1,13 +1,14 @@
 "use client";
 
-import { createMoment } from "@/lib/actions";
+import { createMoment } from "@/lib/actions/moment";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, Image as ImageIcon, X, ArrowLeft } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import Link from "next/link";
 
 export default function AdminMoments() {
   const [isPending, setIsPending] = useState(false);
@@ -23,38 +24,28 @@ export default function AdminMoments() {
       setPreviews([]);
       return;
     }
-    const objectUrls = selectedFiles.map(file => URL.createObjectURL(file));
+    const objectUrls = selectedFiles.map((file) => URL.createObjectURL(file));
     setPreviews(objectUrls);
-
-    // 清理函数，防止内存泄漏
-    return () => objectUrls.forEach(url => URL.revokeObjectURL(url));
+    return () => objectUrls.forEach((url) => URL.revokeObjectURL(url));
   }, [selectedFiles]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    // 🔴 关键修复：如果用户点击取消（files 长度为 0），直接返回，不执行任何操作
     if (!files || files.length === 0) return;
-  
+
     const newFiles = Array.from(files);
-    
-    // 🔴 关键修复：检查 总数 (现有 + 新选) 是否超过 9
     if (selectedFiles.length + newFiles.length > 9) {
       alert("总计不能超过 9 张图片哦！");
-      e.target.value = ""; // 清空 input 状态以便下次选择
+      e.target.value = "";
       return;
     }
-  
-    // 🔴 关键修复：使用追加模式，而不是覆盖模式
-    setSelectedFiles(prev => [...prev, ...newFiles]);
-    
-    // 重置 input 的 value，这样即使选同一个文件也能触发 onChange
+
+    setSelectedFiles((prev) => [...prev, ...newFiles]);
     e.target.value = "";
   };
 
   const removeFile = (index: number) => {
-    const updatedFiles = [...selectedFiles];
-    updatedFiles.splice(index, 1);
-    setSelectedFiles(updatedFiles);
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   async function handleSubmit() {
@@ -70,18 +61,23 @@ export default function AdminMoments() {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         setProgress(`正在处理第 ${i + 1}/${selectedFiles.length} 张...`);
-        
-        const compressedFile = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1200 });
-        const fileExt = file.name.split('.').pop();
+
+        const compressedFile = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1200,
+        });
+        const fileExt = file.name.split(".").pop();
         const fileName = `moment-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from("public-images")
           .upload(fileName, compressedFile);
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage.from("public-images").getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage
+          .from("public-images")
+          .getPublicUrl(fileName);
         imageUrls.push(urlData.publicUrl);
       }
 
@@ -102,23 +98,39 @@ export default function AdminMoments() {
 
   return (
     <div className="max-w-md mx-auto py-10 px-4">
-      <h1 className="text-xl font-bold mb-6">发布新动态</h1>
-      
+      {/* 顶部导航 */}
+      <div className="flex items-center gap-3 mb-6">
+        <Link
+          href="/admin"
+          className="text-zinc-400 hover:text-amber-600 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+        <h1 className="text-xl font-bold text-zinc-800">发布新动态</h1>
+      </div>
+
       <div className="space-y-4">
         <Textarea
           placeholder="分享新鲜事..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="min-h-30 resize-none border-zinc-200"
+          className="min-h-30 resize-none border-amber-100 bg-[#fffef9] focus-visible:ring-amber-200"
         />
 
-        {/* 图片预览区域 (九宫格) */}
+        {/* 图片预览 (九宫格) */}
         {previews.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             {previews.map((url, index) => (
-              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-100 shadow-sm">
-                <img src={url} alt="preview" className="object-cover w-full h-full" />
-                <button 
+              <div
+                key={index}
+                className="relative aspect-square rounded-lg overflow-hidden border border-amber-100 shadow-sm"
+              >
+                <img
+                  src={url}
+                  alt="preview"
+                  className="object-cover w-full h-full"
+                />
+                <button
                   onClick={() => removeFile(index)}
                   className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
                 >
@@ -130,11 +142,13 @@ export default function AdminMoments() {
         )}
 
         {/* 图片选择器 */}
-        <div className="relative border-2 border-dashed border-zinc-100 rounded-xl bg-zinc-50/50 p-4 hover:border-blue-200 transition-colors">
+        <div className="relative border-2 border-dashed border-amber-100 rounded-xl bg-amber-50/30 p-4 hover:border-amber-200 transition-colors">
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
-            <ImageIcon className="w-6 h-6 text-zinc-400" />
+            <ImageIcon className="w-6 h-6 text-amber-400" />
             <span className="text-sm text-zinc-500">
-              {selectedFiles.length > 0 ? `已选中 ${selectedFiles.length}/9 张` : "点击选择图片"}
+              {selectedFiles.length > 0
+                ? `已选中 ${selectedFiles.length}/9 张`
+                : "点击选择图片"}
             </span>
             <input
               type="file"
@@ -146,10 +160,22 @@ export default function AdminMoments() {
           </label>
         </div>
 
-        {isPending && <p className="text-xs text-center text-zinc-400 animate-pulse">{progress}</p>}
+        {isPending && (
+          <p className="text-xs text-center text-amber-500 animate-pulse">
+            {progress}
+          </p>
+        )}
 
-        <Button onClick={handleSubmit} className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isPending}>
-          {isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "发布动态"}
+        <Button
+          onClick={handleSubmit}
+          className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-100"
+          disabled={isPending}
+        >
+          {isPending ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            "发布动态"
+          )}
         </Button>
       </div>
     </div>
