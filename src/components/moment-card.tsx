@@ -5,12 +5,18 @@ import { format } from "date-fns";
 import { Trash2, Edit3 } from "lucide-react";
 import { deleteMoment } from "@/lib/actions/moment";
 import Link from "next/link";
+import { LikeButton } from "@/components/like-button";
+import { CommentSection } from "@/components/comment-section";
+import type { Comment } from "@/lib/types";
+import { useState } from "react";
 
 interface MomentCardProps {
   id?: string;
   content: string;
   createdAt: string;
   images?: string[];
+  likes?: number;
+  comments?: Comment[];
   isAdmin?: boolean;
 }
 
@@ -19,8 +25,11 @@ export function MomentCard({
   content,
   createdAt,
   images,
+  likes = 0,
+  comments = [],
   isAdmin,
 }: MomentCardProps) {
+  const [showComments, setShowComments] = useState(false);
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!id) return;
@@ -55,10 +64,10 @@ export function MomentCard({
         {images && images.length > 0 && (
           <div
             className={`mt-3 grid gap-2 ${images.length === 1
-                ? "grid-cols-1"
-                : images.length === 2
-                  ? "grid-cols-2"
-                  : "grid-cols-3"
+              ? "grid-cols-1"
+              : images.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-3"
               }`}
           >
             {images.map((url, index) => (
@@ -69,6 +78,27 @@ export function MomentCard({
                 className="rounded-lg object-cover w-full aspect-square"
               />
             ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-2">
+          {id && <LikeButton targetId={id} targetType="moment" initialLikes={likes} isSmall />}
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className="text-xs text-zinc-500 hover:text-amber-600 px-3 py-1.5 rounded-full hover:bg-amber-50 transition-colors"
+          >
+            {comments.length > 0 ? `${comments.length} 条评论` : "添加评论"}
+          </button>
+        </div>
+
+        {showComments && id && (
+          <div className="mt-4 pt-4 border-t border-amber-50">
+            <CommentSection
+              targetId={id}
+              targetType="moment"
+              initialComments={comments}
+              isAdmin={isAdmin}
+            />
           </div>
         )}
       </CardContent>

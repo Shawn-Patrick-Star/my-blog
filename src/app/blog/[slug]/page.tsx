@@ -7,6 +7,8 @@ import { Hash, FileText, ArrowLeft } from "lucide-react";
 import { PostAdminActions } from "@/components/post-admin-actions";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import Link from "next/link";
+import { LikeButton } from "@/components/like-button";
+import { CommentSection } from "@/components/comment-section";
 
 export const revalidate = 0;
 
@@ -23,6 +25,12 @@ export default async function BlogPost({
     .eq("slug", slug)
     .single();
   if (!post) notFound();
+
+  const { data: comments } = await supabase
+    .from("comments")
+    .select("*")
+    .eq("post_id", post.id)
+    .order("created_at", { ascending: false });
 
   const isAdmin = await checkIsAdmin();
 
@@ -92,6 +100,23 @@ export default async function BlogPost({
       <div className="pb-20">
         <MarkdownRenderer content={post.content} />
       </div>
+
+      {/* 点赞按钮 */}
+      <div className="flex justify-center mb-10 pb-10 border-b border-amber-100">
+        <LikeButton
+          targetId={post.id}
+          targetType="post"
+          initialLikes={post.likes || 0}
+        />
+      </div>
+
+      {/* 评论区 */}
+      <CommentSection
+        targetId={post.id}
+        targetType="post"
+        initialComments={comments || []}
+        isAdmin={isAdmin}
+      />
     </article>
   );
 }

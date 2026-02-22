@@ -13,6 +13,7 @@ export interface Post {
   word_count: number;
   cover_image?: string | null;
   is_published: boolean;
+  likes?: number;
   created_at: string;
   updated_at?: string;
 }
@@ -22,6 +23,17 @@ export interface Moment {
   id: string;
   content: string;
   images?: string[];
+  likes?: number;
+  created_at: string;
+}
+
+/** 评论 */
+export interface Comment {
+  id: string;
+  post_id?: string;
+  moment_id?: string;
+  author_name: string;
+  content: string;
   created_at: string;
 }
 

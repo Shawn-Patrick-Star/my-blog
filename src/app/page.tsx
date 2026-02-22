@@ -54,6 +54,18 @@ export default async function Home({
     momentQuery.limit(10),
   ]);
 
+  // 获取所有的 comments 用于 moments
+  const momentIds = moments?.map(m => m.id) || [];
+  let allComments: any[] = [];
+  if (momentIds.length > 0) {
+    const { data } = await supabase
+      .from("comments")
+      .select("*")
+      .in("moment_id", momentIds)
+      .order("created_at", { ascending: false });
+    if (data) allComments = data;
+  }
+
   return (
     <div className="py-8 px-4 md:px-8">
       <div className="max-w-4xl mx-auto space-y-12">
@@ -81,7 +93,11 @@ export default async function Home({
           />
           <div className="flex flex-col gap-4">
             {posts?.map((post) => (
-              <BlogCard key={post.id} post={post} isAdmin={isAdmin} />
+              <BlogCard
+                key={post.id}
+                post={post}
+                isAdmin={isAdmin}
+              />
             ))}
             {posts?.length === 0 && (
               <p className="text-zinc-400 text-center py-10">未找到相关笔记</p>
@@ -100,16 +116,21 @@ export default async function Home({
             showAction={isAdmin}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {moments?.map((item) => (
-              <MomentCard
-                key={item.id}
-                id={item.id}
-                content={item.content}
-                createdAt={item.created_at}
-                images={item.images}
-                isAdmin={isAdmin}
-              />
-            ))}
+            {moments?.map((item) => {
+              const momentComments = allComments.filter(c => c.moment_id === item.id);
+              return (
+                <MomentCard
+                  key={item.id}
+                  id={item.id}
+                  content={item.content}
+                  createdAt={item.created_at}
+                  images={item.images}
+                  likes={item.likes}
+                  comments={momentComments}
+                  isAdmin={isAdmin}
+                />
+              );
+            })}
             {moments?.length === 0 && (
               <p className="text-zinc-400 text-center col-span-2 py-10">
                 未找到相关动态
