@@ -11,6 +11,7 @@ import { LikeButton } from "@/components/like-button";
 import { CommentSection } from "@/components/comment-section";
 import { ShareButton } from "@/components/share-button";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { TableOfContents } from "@/components/table-of-contents";
 
 export const revalidate = 0;
 
@@ -36,92 +37,153 @@ export default async function BlogPost({
 
   const isAdmin = await checkIsAdmin();
 
+  const hasCover = !!post.cover_image;
+
   return (
-    <article className="max-w-3xl mx-auto py-10 px-4">
-      {/* 返回按钮 */}
-      <Link
-        href="/blog"
-        className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-amber-600 transition-colors mb-8 group"
-      >
-        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-        返回笔记列表
-      </Link>
-
-      {/* 文章头部 */}
-      <header className="mb-12 text-center relative">
-        {isAdmin && (
-          <div className="absolute top-0 right-0">
-            <PostAdminActions postId={post.id} />
-          </div>
-        )}
-
-        <h1 className="text-4xl font-extrabold tracking-tight mb-6 text-zinc-900 mt-4">
-          {post.title}
-        </h1>
-
-        <div className="flex items-center justify-center gap-4 text-zinc-500 text-sm mb-6">
-          <time dateTime={post.created_at}>
-            发布于 {format(new Date(post.created_at), "yyyy年MM月dd日")}
-          </time>
-          {post.word_count > 0 && (
-            <>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <FileText size={14} /> {post.word_count} 字
-              </span>
-            </>
-          )}
-        </div>
-
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2">
-            {post.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="px-3 py-1 bg-amber-50 text-amber-600 text-sm rounded-full flex items-center gap-1 border border-amber-100"
-              >
-                <Hash size={12} /> {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </header>
-
-      {/* 封面图 */}
-      {post.cover_image && (
-        <div className="w-full h-64 md:h-96 relative rounded-2xl overflow-hidden mb-12 shadow-sm border border-amber-100/50">
-          <img
-            src={post.cover_image}
-            className="object-cover w-full h-full"
-            alt="cover"
-          />
+    <div className="w-full">
+      {/* 顶部标题（无封面图时） */}
+      {!hasCover && (
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-12 pb-8">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-foreground text-balance">
+            {post.title}
+          </h1>
         </div>
       )}
 
-      {/* Markdown 内容 */}
-      <div className="pb-20">
-        <MarkdownRenderer content={post.content} />
+      {/* 主体布局 - 改为三列结构 */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 relative">
+        {/* 封面图（与内容同宽） */}
+        {hasCover && (
+          <div className="w-full mb-8 lg:mb-12">
+            <div className="relative w-full h-[45vh] min-h-[350px] rounded-2xl overflow-hidden shadow-sm border border-border">
+              <img
+                src={post.cover_image}
+                alt="cover"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute bottom-10 right-8 lg:bottom-16 lg:right-16 text-right max-w-4xl z-10 px-4">
+                <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-xl text-balance">
+                  {post.title}
+                </h1>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 两列布局：左侧目录卡片 + 右侧内容卡片 */}
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+          {/* 左侧目录卡片 - 只在桌面显示 */}
+          <div className="hidden lg:block sticky top-24">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6">
+              {/* 返回链接 */}
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-6 group font-medium w-full"
+              >
+                <ArrowLeft
+                  size={16}
+                  className="group-hover:-translate-x-0.5 transition-transform"
+                />
+                返回笔记
+              </Link>
+
+              {/* 目录组件 */}
+              <TableOfContents />
+            </div>
+          </div>
+
+          {/* 右侧内容卡片 */}
+          <div className="min-w-0 w-full">
+            {/* 移动端返回链接 */}
+            <div className="lg:hidden mb-6">
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group font-medium"
+              >
+                <ArrowLeft
+                  size={16}
+                  className="group-hover:-translate-x-0.5 transition-transform"
+                />
+                返回笔记
+              </Link>
+            </div>
+
+            {/* 文章卡片 */}
+            <article className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all">
+              {/* 卡片顶部元数据信息 */}
+              <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
+                      <time dateTime={post.created_at}>
+                        发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
+                      </time>
+                      {post.word_count > 0 && (
+                        <>
+                          <span className="opacity-50">•</span>
+                          <span className="flex items-center gap-1.5">
+                            <FileText size={14} /> {post.word_count} 字
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tag: string) => (
+                          <span
+                            key={tag}
+                            className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase"
+                          >
+                            <Hash size={12} className="inline mr-1 opacity-50" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {isAdmin && (
+                    <div className="shrink-0 bg-background/50 p-2 rounded-xl backdrop-blur-sm border border-border">
+                      <PostAdminActions postId={post.id} />
+                    </div>
+                  )}
+                </div>
+              </header>
+
+              {/* Markdown 正文 */}
+              <div className="p-6 md:p-10 lg:p-12">
+                <MarkdownRenderer content={post.content} />
+              </div>
+
+              {/* 交互区域 */}
+              <footer className="px-6 md:px-10 lg:px-12 py-10 bg-muted/20 border-t border-border/60 rounded-b-2xl">
+                {/* 点赞与分享 */}
+                <div className="flex justify-center gap-6 mb-12">
+                  <LikeButton
+                    targetId={post.id}
+                    targetType="post"
+                    initialLikes={post.likes || 0}
+                  />
+                  <ShareButton title={post.title} />
+                </div>
+
+                {/* 评论区 */}
+                <div className="max-w-3xl mx-auto w-full">
+                  <CommentSection
+                    targetId={post.id}
+                    targetType="post"
+                    initialComments={comments || []}
+                    isAdmin={isAdmin}
+                  />
+                </div>
+              </footer>
+            </article>
+          </div>
+        </div>
       </div>
 
-      {/* 评论区与底部交互按钮 */}
-      <CommentSection
-        targetId={post.id}
-        targetType="post"
-        initialComments={comments || []}
-        isAdmin={isAdmin}
-        actionButtons={(
-          <>
-            <LikeButton
-              targetId={post.id}
-              targetType="post"
-              initialLikes={post.likes || 0}
-            />
-            <ShareButton title={post.title} />
-          </>
-        )}
-      />
-
       <ScrollToTop />
-    </article>
+    </div>
   );
 }
