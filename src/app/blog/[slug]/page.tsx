@@ -10,6 +10,7 @@ import Link from "next/link";
 import { LikeButton } from "@/components/like-button";
 import { CommentSection } from "@/components/comment-section";
 import { ShareButton } from "@/components/share-button";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 export const revalidate = 0;
 
@@ -119,6 +120,8 @@ export default async function BlogPost({
           </>
         )}
       />
+
+      <ScrollToTop />
     </article>
   );
 }

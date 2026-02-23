@@ -108,11 +108,11 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="min-h-30 bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
+        className="min-h-30 bg-card border-border focus-visible:ring-ring"
       />
 
       <div className="space-y-4">
-        <label className="text-sm font-medium text-zinc-500">
+        <label className="text-sm font-medium text-muted-foreground">
           图片管理 ({existingImages.length + newFiles.length}/9)
         </label>
 
@@ -121,7 +121,7 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
           {existingImages.map((url) => (
             <div
               key={url}
-              className="relative aspect-square rounded-lg overflow-hidden border border-amber-100"
+              className="relative aspect-square rounded-lg overflow-hidden border border-border"
             >
               <img
                 src={url}
@@ -130,7 +130,7 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
               />
               <button
                 onClick={() => removeExisting(url)}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1"
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
               >
                 <X size={12} />
               </button>
@@ -144,7 +144,7 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
           {newPreviews.map((url, index) => (
             <div
               key={url}
-              className="relative aspect-square rounded-lg overflow-hidden border border-blue-200"
+              className="relative aspect-square rounded-lg overflow-hidden border border-primary/20"
             >
               <img
                 src={url}
@@ -153,11 +153,11 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
               />
               <button
                 onClick={() => removeNew(index)}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1"
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
               >
                 <X size={12} />
               </button>
-              <div className="absolute bottom-1 left-1 bg-blue-500 text-[8px] text-white px-1 rounded">
+              <div className="absolute bottom-1 left-1 bg-primary text-[8px] text-primary-foreground px-1 rounded">
                 新选择
               </div>
             </div>
@@ -165,9 +165,9 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
 
           {/* 上传按钮 */}
           {existingImages.length + newFiles.length < 9 && (
-            <label className="border-2 border-dashed border-amber-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-amber-50/50 aspect-square transition-colors">
-              <ImageIcon className="text-amber-300" />
-              <span className="text-[10px] text-zinc-400 mt-1">添加</span>
+            <label className="border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-accent aspect-square transition-colors">
+              <ImageIcon className="text-primary/40" />
+              <span className="text-[10px] text-muted-foreground mt-1">添加</span>
               <input
                 type="file"
                 multiple
@@ -180,7 +180,7 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
       </div>
 
       {progress && (
-        <p className="text-center text-xs text-amber-500 animate-pulse">
+        <p className="text-center text-xs text-primary animate-pulse">
           {progress}
         </p>
       )}
@@ -189,7 +189,7 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
         <Button
           onClick={handleUpdate}
           disabled={isPending}
-          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-100"
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
         >
           {isPending ? (
             <Loader2 className="animate-spin mr-2" size={16} />
@@ -201,7 +201,7 @@ export function EditMomentForm({ moment }: EditMomentFormProps) {
           variant="outline"
           onClick={() => router.back()}
           disabled={isPending}
-          className="border-amber-100"
+          className="border-border"
         >
           取消
         </Button>

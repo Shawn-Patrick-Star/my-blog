@@ -88,7 +88,7 @@ export default async function Home({
             accentColor="bg-amber-400"
             actionLabel="写新笔记"
             actionHref="/admin/write"
-            actionColorClass="text-amber-600 border-amber-200 hover:bg-amber-50"
+            actionColorClass="text-amber-600 border-amber-200 bg-card hover:bg-amber-50"
             showAction={isAdmin}
           />
           <div className="flex flex-col gap-4">
@@ -112,7 +112,7 @@ export default async function Home({
             accentColor="bg-blue-400"
             actionLabel="发新动态"
             actionHref="/admin/moments"
-            actionColorClass="text-blue-600 border-blue-200 hover:bg-blue-50"
+            actionColorClass="text-blue-600 border-blue-200 bg-card hover:bg-blue-50"
             showAction={isAdmin}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

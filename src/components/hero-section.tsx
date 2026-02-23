@@ -11,8 +11,8 @@ interface HeroSectionProps {
   isAdmin?: boolean; // 1. 接收这个新参数
 }
 
-export function HeroSection({ 
-  initialImage, 
+export function HeroSection({
+  initialImage,
   title = "Shawn's BLOG", // 默认标题
   isAdmin = false // 默认为 false
 }: HeroSectionProps) {
@@ -21,7 +21,7 @@ export function HeroSection({
 
   return (
     <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-sm group mb-10 bg-zinc-200">
-      
+
       <Image
         src={displayImage}
         alt="Hero Background"
@@ -29,11 +29,11 @@ export function HeroSection({
         className="object-cover brightness-75 transition-transform duration-700 group-hover:scale-105"
         priority
       />
-      
+
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10">
-        <h1 
+        <h1
           className="text-5xl md:text-6xl font-bold tracking-wider drop-shadow-lg text-center px-4"
-          style={{ fontFamily: '"Fredoka", sans-serif' }} 
+          style={{ fontFamily: '"Fredoka", sans-serif' }}
         >
           {title}
         </h1>

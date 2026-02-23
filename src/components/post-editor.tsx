@@ -96,11 +96,11 @@ export function PostEditor({
           size="icon"
           onClick={() => router.back()}
           type="button"
-          className="text-zinc-400 hover:text-amber-600"
+          className="text-muted-foreground hover:text-primary"
         >
           <ArrowLeft size={20} />
         </Button>
-        <h1 className="text-2xl font-bold text-zinc-800">{pageTitle}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -114,7 +114,7 @@ export function PostEditor({
         {/* 标题、摘要、标签、封面 —— 始终显示 */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700">
+            <label className="text-sm font-medium text-muted-foreground">
               文章标题
             </label>
             <Input
@@ -122,13 +122,13 @@ export function PostEditor({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="在此输入标题..."
-              className="text-lg py-6 bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
+              className="text-lg py-6 bg-card border-border focus-visible:ring-ring"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700">
+            <label className="text-sm font-medium text-muted-foreground">
               摘要 (SEO / 列表展示)
             </label>
             <Input
@@ -136,13 +136,13 @@ export function PostEditor({
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
               placeholder="简单介绍一下这篇文章..."
-              className="border-amber-100 focus-visible:ring-amber-200"
+              className="border-border focus-visible:ring-ring bg-card"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">
+              <label className="text-sm font-medium text-muted-foreground">
                 标签 (按回车添加)
               </label>
               <TagInput
@@ -152,17 +152,17 @@ export function PostEditor({
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
-                <ImageIcon size={16} className="text-amber-500" /> 封面图片
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <ImageIcon size={16} className="text-primary" /> 封面图片
               </label>
               <Input
                 name="cover"
                 type="file"
                 accept="image/*"
-                className="cursor-pointer border-amber-100"
+                className="cursor-pointer border-border bg-card"
               />
               {initialData?.cover_image && (
-                <div className="mt-2 relative w-32 h-20 rounded border border-amber-100 overflow-hidden opacity-40">
+                <div className="mt-2 relative w-32 h-20 rounded border border-border overflow-hidden opacity-40">
                   <Image
                     src={initialData.cover_image}
                     alt="current"
@@ -178,12 +178,12 @@ export function PostEditor({
         {/* 正文区域 —— 编辑 / 预览切换 */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-zinc-700">
+            <label className="text-sm font-medium text-muted-foreground">
               正文内容 (Markdown)
             </label>
             <div className="flex items-center gap-2">
               {!isPreview && (
-                <label className="text-xs bg-white border border-amber-100 hover:bg-amber-50 px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-amber-600 shadow-sm">
+                <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm">
                   <Upload size={12} /> 插入图片
                   <input
                     type="file"
@@ -197,7 +197,7 @@ export function PostEditor({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="text-amber-600 border-amber-200 bg-amber-50/30 hover:bg-amber-50"
+                className="text-primary border-border bg-accent/30 hover:bg-accent"
                 onClick={() => setIsPreview(!isPreview)}
               >
                 {isPreview ? (
@@ -214,7 +214,7 @@ export function PostEditor({
           </div>
 
           {isPreview ? (
-            <div className="p-6 bg-[#fffef9] border border-amber-100 rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">
+            <div className="p-6 bg-card border border-border rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">
               <MarkdownRenderer content={content} />
             </div>
           ) : (
@@ -223,17 +223,17 @@ export function PostEditor({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="# 开始创作吧..."
-              className="min-h-125 font-mono leading-relaxed bg-[#fffef9] border-amber-100 focus-visible:ring-amber-200"
+              className="min-h-125 font-mono leading-relaxed bg-card border-border focus-visible:ring-ring"
               required
             />
           )}
         </div>
 
-        <div className="flex gap-4 pt-6 border-t border-amber-100">
+        <div className="flex gap-4 pt-6 border-t border-border">
           <Button
             type="submit"
             disabled={isPending || isPreview}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-10 shadow-lg shadow-amber-100"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 shadow-lg shadow-primary/20"
           >
             {isPending ? (
               <>

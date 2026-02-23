@@ -65,15 +65,15 @@ export function CommentSection({
     };
 
     return (
-        <div className="mt-12 pt-8 border-t border-amber-100 max-w-2xl mx-auto w-full">
+        <div className="mt-12 pt-8 border-t border-border max-w-2xl mx-auto w-full">
             {/* 顶部的交互按钮区 */}
             {actionButtons && (
-                <div className="flex justify-center flex-wrap gap-4 mb-10 pb-10 border-b border-amber-100">
+                <div className="flex justify-center flex-wrap gap-4 mb-10 pb-10 border-b border-border">
                     {actionButtons}
                     <Button
                         variant="outline"
                         onClick={() => setIsReplying(r => !r)}
-                        className="gap-2 transition-all shadow-sm rounded-full text-zinc-500 hover:text-amber-600 hover:bg-amber-50/50 hover:border-amber-200 border-zinc-200"
+                        className="gap-2 transition-all shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-accent hover:border-border border-border"
                     >
                         <MessageCircle size={18} />
                         <span>写评论</span>
@@ -81,36 +81,36 @@ export function CommentSection({
                 </div>
             )}
 
-            <h3 className="text-xl font-bold flex items-center gap-2 text-zinc-800 mb-8" id="comments">
-                <MessageCircle className="text-amber-500" size={24} />
+            <h3 className="text-xl font-bold flex items-center gap-2 text-foreground mb-8" id="comments">
+                <MessageCircle className="text-primary" size={24} />
                 评论区 ({initialComments.length})
             </h3>
 
             {/* 发表留言框 */}
             {isReplying ? (
-                <div className="bg-[#fffef9] p-5 rounded-2xl border border-amber-100 shadow-sm mb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm mb-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-700">你的昵称</label>
+                            <label className="text-sm font-medium text-muted-foreground">你的昵称</label>
                             <Input
                                 name="author_name"
                                 placeholder="怎么称呼你？"
                                 required
                                 maxLength={20}
-                                className="bg-white border-amber-100 focus-visible:ring-amber-200"
+                                className="bg-background border-border focus-visible:ring-ring"
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-700">留言内容</label>
+                            <label className="text-sm font-medium text-muted-foreground">留言内容</label>
                             <Textarea
                                 name="content"
                                 placeholder="说点什么吧..."
                                 required
                                 maxLength={500}
-                                className="min-h-[100px] resize-none bg-white border-amber-100 focus-visible:ring-amber-200"
+                                className="min-h-[100px] resize-none bg-background border-border focus-visible:ring-ring"
                             />
                         </div>
-                        {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
+                        {errorMsg && <p className="text-destructive text-sm">{errorMsg}</p>}
                         <div className="flex justify-end gap-2 pt-2">
                             {(!startOpen || actionButtons) && (
                                 <Button
@@ -124,7 +124,7 @@ export function CommentSection({
                             <Button
                                 type="submit"
                                 disabled={isPending}
-                                className="bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-100/50"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
                             >
                                 {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 {isPending ? "发表中..." : "发表留言"}
@@ -136,7 +136,7 @@ export function CommentSection({
                 <div className="mb-10 text-center">
                     <Button
                         onClick={() => setIsReplying(true)}
-                        className="bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-100/50 rounded-full px-8"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 rounded-full px-8"
                     >
                         我也来说一句
                     </Button>
@@ -149,39 +149,39 @@ export function CommentSection({
                     initialComments.map((comment) => (
                         <div
                             key={comment.id}
-                            className="group flex gap-4 p-4 rounded-xl hover:bg-amber-50/50 transition-colors border border-transparent hover:border-amber-100"
+                            className="group flex gap-4 p-4 rounded-xl hover:bg-accent transition-colors border border-transparent hover:border-border"
                         >
-                            <div className="w-10 h-10shrink-0 bg-zinc-100 rounded-full flex items-center justify-center text-zinc-400 border border-zinc-200/60">
+                            <div className="w-10 h-10 shrink-0 bg-secondary rounded-full flex items-center justify-center text-muted-foreground border border-border">
                                 <User size={20} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-semibold text-zinc-800 text-sm">
+                                        <span className="font-semibold text-foreground text-sm">
                                             {comment.author_name}
                                         </span>
-                                        <span className="text-zinc-400 text-xs">
+                                        <span className="text-muted-foreground text-xs">
                                             {format(new Date(comment.created_at), "yyyy-MM-dd HH:mm")}
                                         </span>
                                     </div>
                                     {isAdmin && (
                                         <button
                                             onClick={() => handleDelete(comment.id)}
-                                            className="text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
                                             title="删除评论"
                                         >
                                             <Trash2 size={16} />
                                         </button>
                                     )}
                                 </div>
-                                <p className="text-zinc-600 text-sm leading-relaxed break-words whitespace-pre-wrap">
+                                <p className="text-foreground/80 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
                                     {comment.content}
                                 </p>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-10 text-zinc-400 bg-zinc-50/50 rounded-xl border border-dashed border-zinc-200">
+                    <div className="text-center py-10 text-muted-foreground bg-secondary/50 rounded-xl border border-dashed border-border">
                         暂无留言，快来抢沙发吧的！
                     </div>
                 )}
