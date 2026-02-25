@@ -44,13 +44,13 @@ export default async function BlogPost({
       {/* 顶部标题（无封面图时） */}
       {!hasCover && (
         <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-12 pb-8">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-foreground text-balance">
+          <h1 className="font-fredoka text-4xl md:text-5xl font-bold mb-6 text-foreground text-balance">
             {post.title}
           </h1>
         </div>
       )}
 
-      {/* 主体布局 - 改为三列结构 */}
+      {/* 主体布局 */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 relative">
         {/* 封面图（与内容同宽） */}
         {hasCover && (
@@ -61,9 +61,10 @@ export default async function BlogPost({
                 alt="cover"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-10 right-8 lg:bottom-16 lg:right-16 text-right max-w-4xl z-10 px-4">
-                <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-xl text-balance">
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
+              {/* 标题移到左下角，使用 Fredoka 字体 */}
+              <div className="absolute bottom-10 left-8 lg:bottom-16 lg:left-16 max-w-4xl z-10">
+                <h1 className="font-fredoka text-3xl md:text-5xl font-bold text-white drop-shadow-xl text-balance">
                   {post.title}
                 </h1>
               </div>
@@ -87,16 +88,16 @@ export default async function BlogPost({
                 />
                 返回笔记
               </Link>
-
+              
               {/* 目录组件 */}
               <TableOfContents />
             </div>
           </div>
 
-          {/* 右侧内容卡片 */}
-          <div className="min-w-0 w-full">
+          {/* 右侧内容区域 */}
+          <div className="min-w-0 w-full space-y-8">
             {/* 移动端返回链接 */}
-            <div className="lg:hidden mb-6">
+            <div className="lg:hidden">
               <Link
                 href="/blog"
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group font-medium"
@@ -109,7 +110,7 @@ export default async function BlogPost({
               </Link>
             </div>
 
-            {/* 文章卡片 */}
+            {/* 文章卡片（不含评论） */}
             <article className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all">
               {/* 卡片顶部元数据信息 */}
               <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
@@ -156,10 +157,9 @@ export default async function BlogPost({
                 <MarkdownRenderer content={post.content} />
               </div>
 
-              {/* 交互区域 */}
-              <footer className="px-6 md:px-10 lg:px-12 py-10 bg-muted/20 border-t border-border/60 rounded-b-2xl">
-                {/* 点赞与分享 */}
-                <div className="flex justify-center gap-6 mb-12">
+              {/* 点赞与分享区域（仍在文章卡片内） */}
+              <div className="px-6 md:px-10 lg:px-12 py-8 border-t border-border/60">
+                <div className="flex justify-center gap-6">
                   <LikeButton
                     targetId={post.id}
                     targetType="post"
@@ -167,18 +167,18 @@ export default async function BlogPost({
                   />
                   <ShareButton title={post.title} />
                 </div>
-
-                {/* 评论区 */}
-                <div className="max-w-3xl mx-auto w-full">
-                  <CommentSection
-                    targetId={post.id}
-                    targetType="post"
-                    initialComments={comments || []}
-                    isAdmin={isAdmin}
-                  />
-                </div>
-              </footer>
+              </div>
             </article>
+
+            {/* 评论区独立卡片 */}
+            <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 md:p-8">
+              <CommentSection
+                targetId={post.id}
+                targetType="post"
+                initialComments={comments || []}
+                isAdmin={isAdmin}
+              />
+            </div>
           </div>
         </div>
       </div>

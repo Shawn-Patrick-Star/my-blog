@@ -32,8 +32,7 @@ export function HeroSection({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10">
         <h1
-          className="text-5xl md:text-6xl font-bold tracking-wider drop-shadow-lg text-center px-4"
-          style={{ fontFamily: '"Fredoka", sans-serif' }}
+          className="font-fredoka text-5xl md:text-6xl font-bold tracking-wider drop-shadow-lg text-center px-4"
         >
           {title}
         </h1>
