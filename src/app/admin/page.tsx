@@ -30,7 +30,7 @@ export default function AdminDashboard() {
       {/* 功能卡片网格 */}
       <div className="grid md:grid-cols-3 gap-6">
         <Link href="/admin/write">
-          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full border-amber-100/50 bg-[#fffef9]">
+          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full border-amber-100/50 bg-card">
             <CardHeader>
               <div className="w-10 h-10 bg-amber-500 text-white rounded-lg flex items-center justify-center mb-4">
                 <PenTool size={20} />
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         </Link>
 
         <Link href="/admin/moments">
-          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full border-amber-100/50 bg-[#fffef9]">
+          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full border-amber-100/50 bg-card">
             <CardHeader>
               <div className="w-10 h-10 bg-blue-500 text-white rounded-lg flex items-center justify-center mb-4">
                 <Camera size={20} />
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
         </Link>
 
         <Link href="/admin/settings">
-          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full border-amber-100/50 bg-[#fffef9]">
+          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full border-amber-100/50 bg-card">
             <CardHeader>
               <div className="w-10 h-10 bg-zinc-700 text-white rounded-lg flex items-center justify-center mb-4">
                 <Settings size={20} />

@@ -81,7 +81,7 @@ export function CommentSection({
                 </div>
             )}
 
-            <h3 className="text-xl font-bold flex items-center gap-2 text-foreground mb-8" id="comments">
+            <h3 className="text-xl font-bold flex items-center gap-2 text-foreground mb-8">
                 <MessageCircle className="text-primary" size={24} />
                 评论区 ({initialComments.length})
             </h3>

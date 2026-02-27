@@ -88,7 +88,7 @@ export default async function BlogPost({
                 />
                 返回笔记
               </Link>
-              
+
               {/* 目录组件 */}
               <TableOfContents />
             </div>
@@ -157,26 +157,25 @@ export default async function BlogPost({
                 <MarkdownRenderer content={post.content} />
               </div>
 
-              {/* 点赞与分享区域（仍在文章卡片内） */}
-              <div className="px-6 md:px-10 lg:px-12 py-8 border-t border-border/60">
-                <div className="flex justify-center gap-6">
-                  <LikeButton
-                    targetId={post.id}
-                    targetType="post"
-                    initialLikes={post.likes || 0}
-                  />
-                  <ShareButton title={post.title} />
-                </div>
-              </div>
             </article>
 
             {/* 评论区独立卡片 */}
-            <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 md:p-8">
+            <div id="comments" className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 md:p-8">
               <CommentSection
                 targetId={post.id}
                 targetType="post"
                 initialComments={comments || []}
                 isAdmin={isAdmin}
+                actionButtons={(
+                  <>
+                    <LikeButton
+                      targetId={post.id}
+                      targetType="post"
+                      initialLikes={post.likes || 0}
+                    />
+                    <ShareButton title={post.title} />
+                  </>
+                )}
               />
             </div>
           </div>

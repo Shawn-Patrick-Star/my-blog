@@ -54,7 +54,8 @@ export function TableOfContents() {
 
     return (
         <nav className="sticky top-24 hidden lg:block w-64 max-h-[calc(100vh-6rem)] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
-            <h4 className="text-sm font-semibold mb-4 text-foreground/80 uppercase tracking-wider">目录</h4>
+            <h4 className="text-sm font-semibold mb-4 text-foreground/80 uppercase tracking-wider text-center">contents</h4>
+            <hr className="border-t border-black/20 dark:border-white/20 mb-4" />
             <ul className="space-y-2.5 text-sm">
                 {headings.map((heading) => (
                     <li

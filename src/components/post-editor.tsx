@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
-import { ImageIcon, Eye, Edit3, Upload, Loader2, ArrowLeft } from "lucide-react";
+import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import type { ActionResult } from "@/lib/types";
 
@@ -114,8 +114,8 @@ export function PostEditor({
         {/* 标题、摘要、标签、封面 —— 始终显示 */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              文章标题
+            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Heading size={16} className="text-primary" /> 文章标题
             </label>
             <Input
               name="title"
@@ -128,8 +128,8 @@ export function PostEditor({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              摘要 (SEO / 列表展示)
+            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <FileText size={16} className="text-primary" /> 摘要
             </label>
             <Input
               name="excerpt"
@@ -142,12 +142,15 @@ export function PostEditor({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">
-                标签 (按回车添加)
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Tag size={16} className="text-primary" /> 标签 (按回车添加)
               </label>
               <TagInput
                 name="tags"
                 defaultTags={initialData?.tags || []}
+                placeholder="输入标签后按回车..."
+                inputClassName="bg-card border-border focus-visible:ring-ring"
+                badgeClassName="bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
               />
             </div>
 
@@ -178,8 +181,8 @@ export function PostEditor({
         {/* 正文区域 —— 编辑 / 预览切换 */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-muted-foreground">
-              正文内容 (Markdown)
+            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <FileText size={16} className="text-primary" /> 正文内容 (Markdown)
             </label>
             <div className="flex items-center gap-2">
               {!isPreview && (
