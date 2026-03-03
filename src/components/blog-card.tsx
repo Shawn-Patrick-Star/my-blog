@@ -29,38 +29,38 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
   return (
     <div className="group relative h-full">
       <Link href={`/blog/${post.slug}`} className="block h-full">
-        <Card className="p-0 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-card border-border h-full">
-          <div className="flex flex-col md:flex-row items-stretch h-full min-h-40">
+        <Card className="p-0 overflow-hidden hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-500 bg-card border-border/50 h-full shadow-sm rounded-2xl">
+          <div className="flex flex-col md:flex-row items-stretch h-full min-h-[220px]">
             {/* 左侧文字内容区 */}
-            <div className="flex-1 p-6 flex flex-col justify-between order-2 md:order-1">
+            <div className="flex-1 p-8 flex flex-col justify-between order-2 md:order-1">
               <div>
-                <div className="flex items-center gap-3 text-xs text-primary/70 mb-3 font-mono">
+                <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground/80 mb-4 font-bold tracking-widest uppercase">
                   <time>
                     {format(new Date(post.created_at), "yyyy-MM-dd")}
                   </time>
                   {post.category && (
                     <>
-                      <span className="opacity-50">•</span>
-                      <span className="text-primary font-bold uppercase tracking-widest text-[10px]">
+                      <span className="opacity-30">|</span>
+                      <span className="text-primary font-black">
                         {post.category}
                       </span>
                     </>
                   )}
                   {post.word_count > 0 && (
                     <>
-                      <span className="opacity-50">•</span>
-                      <span className="flex items-center gap-1 opacity-80">
-                        <FileText size={10} /> {post.word_count} 字
+                      <span className="opacity-30">|</span>
+                      <span className="flex items-center gap-1">
+                        <FileText size={10} /> {post.word_count}
                       </span>
                     </>
                   )}
                 </div>
 
-                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                <h3 className="text-2xl font-black text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight">
                   {post.title}
                 </h3>
 
-                <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mb-4">
+                <p className="text-muted-foreground/90 text-sm line-clamp-2 leading-relaxed mb-6 font-medium">
                   {post.excerpt || "点击阅读全文以了解更多精彩内容..."}
                 </p>
               </div>
@@ -71,7 +71,7 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
                   {post.tags.map((tag: string) => (
                     <span
                       key={tag}
-                      className="px-2 py-0.5 bg-accent text-accent-foreground text-[10px] uppercase tracking-wider rounded font-bold border border-border"
+                      className="px-2.5 py-1 bg-secondary text-secondary-foreground text-[10px] uppercase tracking-wider rounded-md font-bold border border-border/50"
                     >
                       {tag}
                     </span>

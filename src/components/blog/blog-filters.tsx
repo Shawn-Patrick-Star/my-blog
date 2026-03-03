@@ -50,7 +50,7 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                     />
                 </div>
 
-                <div className="flex bg-muted/50 p-1 rounded-xl border border-border self-stretch md:self-auto">
+                <div className="flex bg-secondary/50 p-1.5 rounded-2xl border border-border shadow-inner self-stretch md:self-auto">
                     {[
                         { id: "timeline", label: "时间线", icon: Clock },
                         { id: "category", label: "分类", icon: ListFilter },
@@ -62,13 +62,13 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                             size="sm"
                             onClick={() => updateParams({ view: tab.id, cat: null, tag: null, q: null })}
                             className={cn(
-                                "rounded-lg px-4 flex items-center gap-2 transition-all",
+                                "rounded-xl px-5 h-9 flex items-center gap-2 transition-all duration-300",
                                 currentView === tab.id
-                                    ? "bg-background text-primary shadow-sm font-bold"
-                                    : "text-muted-foreground hover:text-foreground"
+                                    ? "bg-background text-primary shadow-md font-black ring-1 ring-black/5"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
                             )}
                         >
-                            <tab.icon size={14} />
+                            <tab.icon size={14} className={cn("transition-transform duration-500", currentView === tab.id && "scale-110")} />
                             {tab.label}
                         </Button>
                     ))}
