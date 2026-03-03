@@ -113,44 +113,47 @@ export default async function BlogPost({
             {/* 文章卡片（不含评论） */}
             <article className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all">
               {/* 卡片顶部元数据信息 */}
-              <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
-                      <time dateTime={post.created_at}>
-                        发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
-                      </time>
-                      {post.word_count > 0 && (
-                        <>
-                          <span className="opacity-50">•</span>
-                          <span className="flex items-center gap-1.5">
-                            <FileText size={14} /> {post.word_count} 字
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {post.tags.map((tag: string) => (
-                          <span
-                            key={tag}
-                            className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase"
-                          >
-                            <Hash size={12} className="inline mr-1 opacity-50" />
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+             <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
+              {/* 使用 grid 布局精确控制 */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
+                {/* 左侧文字区域 */}
+                <div className="space-y-4">
+                  {/* 第一行：日期和字数 - 使用 flex 确保在一行 */}
+                  <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
+                    <time dateTime={post.created_at}>
+                      发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
+                    </time>
+                    {post.word_count > 0 && (
+                      <>
+                        <span className="opacity-50">•</span>
+                        <span className="flex items-center gap-1.5">
+                          <FileText size={14} /> {post.word_count} 字
+                        </span>
+                      </>
                     )}
                   </div>
-
-                  {isAdmin && (
-                    <div className="shrink-0 bg-background/50 p-2 rounded-xl backdrop-blur-sm border border-border">
-                      <PostAdminActions postId={post.id} />
+                  
+                  {/* 第二行：标签 */}
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.map((tag: string) => (
+                        <span key={tag} className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase">
+                          <Hash size={12} className="inline mr-1 opacity-50" />
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
-              </header>
+
+                {/* 右侧图标 - 固定在右上角，与第一行对齐 */}
+                {isAdmin && (
+                  <div className="flex items-center gap-1 md:mt-0 md:self-start">
+                    <PostAdminActions postId={post.id} />
+                  </div>
+                )}
+              </div>
+            </header>
 
               {/* Markdown 正文 */}
               <div className="p-6 md:p-10 lg:p-12">

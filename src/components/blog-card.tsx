@@ -38,10 +38,21 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
                   <time>
                     {format(new Date(post.created_at), "yyyy-MM-dd")}
                   </time>
+                  {post.category && (
+                    <>
+                      <span className="opacity-50">•</span>
+                      <span className="text-primary font-bold uppercase tracking-widest text-[10px]">
+                        {post.category}
+                      </span>
+                    </>
+                  )}
                   {post.word_count > 0 && (
-                    <span className="flex items-center gap-1 opacity-80">
-                      <FileText size={10} /> {post.word_count} 字
-                    </span>
+                    <>
+                      <span className="opacity-50">•</span>
+                      <span className="flex items-center gap-1 opacity-80">
+                        <FileText size={10} /> {post.word_count} 字
+                      </span>
+                    </>
                   )}
                 </div>
 

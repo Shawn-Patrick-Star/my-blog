@@ -1,40 +1,61 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Edit, Trash2 } from "lucide-react";
-import { deletePost } from "@/lib/actions/post";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export function PostAdminActions({ postId }: { postId: string }) {
+interface PostAdminActionsProps {
+  postId: string;
+}
+
+export function PostAdminActions({ postId }: PostAdminActionsProps) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (confirm("确定要删除这篇笔记吗？删除后不可恢复。")) {
+    if (confirm("确定要删除这篇文章吗？此操作不可撤销。")) {
       try {
-        await deletePost(postId);
-        alert("删除成功");
-        router.push("/");
-      } catch (err: any) {
-        alert("删除失败: " + err.message);
+        const response = await fetch(`/api/posts/${postId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          router.refresh();
+          router.push("/blog");
+        }
+      } catch (error) {
+        console.error("删除失败:", error);
+        alert("删除失败，请重试");
       }
     }
   };
 
   return (
-    <div className="flex gap-2">
+    <>
+      {/* 编辑按钮 - 纯图标 */}
       <Link href={`/admin/write/${postId}`}>
-        <button className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors text-sm font-medium border border-amber-100">
-          <Edit size={14} />
-          编辑
-        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
+          title="编辑文章"
+        >
+          <Edit size={16} />
+          <span className="sr-only">编辑</span>
+        </Button>
       </Link>
-      <button
+
+      {/* 删除按钮 - 纯图标 */}
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={handleDelete}
-        className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium border border-red-100"
+        className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+        title="删除文章"
       >
-        <Trash2 size={14} />
-        删除
-      </button>
-    </div>
+        <Trash2 size={16} />
+        <span className="sr-only">删除</span>
+      </Button>
+    </>
   );
 }

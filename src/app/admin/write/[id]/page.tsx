@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import { PostEditor } from "@/components/post-editor";
-import { updatePost } from "@/lib/actions/post";
+import { updatePost, getCategories } from "@/lib/actions/post";
 
 export default async function EditPostPage({
   params,
@@ -17,5 +17,7 @@ export default async function EditPostPage({
     .single();
   if (!post) notFound();
 
-  return <PostEditor initialData={post} action={updatePost} title="编辑笔记" />;
+  const categories = await getCategories();
+
+  return <PostEditor initialData={post} categories={categories} action={updatePost} title="编辑笔记" />;
 }

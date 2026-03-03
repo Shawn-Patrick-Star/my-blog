@@ -12,6 +12,7 @@ export interface Post {
   tags?: string[];
   word_count: number;
   cover_image?: string | null;
+  category?: string;
   is_published: boolean;
   likes?: number;
   created_at: string;

@@ -21,13 +21,16 @@ interface PostEditorProps {
     excerpt?: string;
     tags?: string[];
     cover_image?: string;
+    category?: string;
   };
+  categories?: string[];
   action: (fd: FormData) => Promise<ActionResult>;
   title: string;
 }
 
 export function PostEditor({
   initialData,
+  categories = [],
   action,
   title: pageTitle,
 }: PostEditorProps) {
@@ -38,6 +41,7 @@ export function PostEditor({
   const [title, setTitle] = useState(initialData?.title || "");
   const [content, setContent] = useState(initialData?.content || "");
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || "");
+  const [category, setCategory] = useState(initialData?.category || "");
 
   // 正文插图上传
   async function handleBodyImageUpload(
@@ -138,6 +142,25 @@ export function PostEditor({
               placeholder="简单介绍一下这篇文章..."
               className="border-border focus-visible:ring-ring bg-card"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Heading size={16} className="text-primary" /> 分类
+            </label>
+            <Input
+              name="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="输入或选择分类..."
+              list="category-list"
+              className="border-border focus-visible:ring-ring bg-card"
+            />
+            <datalist id="category-list">
+              {categories.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,6 +1,7 @@
 import { PostEditor } from "@/components/post-editor";
-import { createPost } from "@/lib/actions/post";
+import { createPost, getCategories } from "@/lib/actions/post";
 
-export default function NewPostPage() {
-  return <PostEditor action={createPost} title="写新笔记" />;
+export default async function NewPostPage() {
+  const categories = await getCategories();
+  return <PostEditor action={createPost} categories={categories} title="写新笔记" />;
 }

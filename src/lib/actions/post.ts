@@ -11,6 +11,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
     const content = formData.get("content") as string;
     const excerpt = formData.get("excerpt") as string;
     const tagsStr = formData.get("tags") as string;
+    const category = formData.get("category") as string;
     const coverFile = formData.get("cover") as File;
 
     let slug = formData.get("slug") as string;
@@ -33,6 +34,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
             content,
             excerpt,
             tags,
+            category,
             word_count: wordCount,
             cover_image: coverImageUrl,
             is_published: true,
@@ -53,6 +55,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
     const content = formData.get("content") as string;
     const excerpt = formData.get("excerpt") as string;
     const tagsStr = formData.get("tags") as string;
+    const category = formData.get("category") as string;
     const coverFile = formData.get("cover") as File;
     const slug = formData.get("slug") as string;
 
@@ -69,6 +72,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
         content,
         excerpt,
         tags,
+        category,
         word_count: wordCount,
         updated_at: new Date().toISOString(),
     };
@@ -96,4 +100,28 @@ export async function deletePost(id: string): Promise<void> {
     if (error) throw new Error(error.message);
     revalidatePath("/");
     revalidatePath("/blog");
+}
+
+/** 获取所有分类 */
+export async function getCategories(): Promise<string[]> {
+    const { data, error } = await supabase
+        .from("posts")
+        .select("category")
+        .not("category", "is", null);
+
+    if (error) return [];
+    const cats = data.map(i => i.category);
+    return Array.from(new Set(cats)).filter(Boolean);
+}
+
+/** 获取所有标签 */
+export async function getTags(): Promise<string[]> {
+    const { data, error } = await supabase
+        .from("posts")
+        .select("tags")
+        .not("tags", "is", null);
+
+    if (error) return [];
+    const allTags = data.flatMap(i => i.tags || []);
+    return Array.from(new Set(allTags)).filter(Boolean);
 }

@@ -17,7 +17,7 @@ export function Navbar() {
 
     return (
         <div className="sticky top-0 z-50 w-full px-4 flex justify-center">
-            <nav className="flex h-14 w-full max-w-4xl items-center justify-between rounded-full border border-border/50 bg-background/60 backdrop-blur-xl px-6 shadow-sm">
+            <nav className="flex h-14 w-full max-w-4xl items-center justify-between rounded-full border border-border/50 bg-card/60 backdrop-blur-xl px-6 shadow-sm">
                 {/* Logo */}
                 <Link
                     href="/"
