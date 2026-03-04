@@ -22,7 +22,7 @@ export function SearchInput({ defaultValue }: { defaultValue: string }) {
 
   return (
     <div className="relative shadow-lg rounded-full">
-      <Search className="absolute left-4 top-3 text-zinc-400 w-5 h-5" />
+      <Search className="absolute left-4 top-3 text-muted-foreground w-5 h-5" />
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}

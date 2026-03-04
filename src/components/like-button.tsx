@@ -84,8 +84,8 @@ export function LikeButton({
             className={cn(
                 "gap-2 transition-all shadow-sm rounded-full",
                 isLiked
-                    ? "bg-red-50 text-red-600 border-red-200"
-                    : "text-zinc-500 hover:text-red-500 hover:bg-red-50/50 hover:border-red-200 border-zinc-200",
+                    ? "bg-red-500/10 text-red-500 border-red-500/20"
+                    : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 border-border",
                 isSmall ? "px-3 py-1 h-8 text-xs" : "",
                 className
             )}

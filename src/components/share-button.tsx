@@ -38,7 +38,7 @@ export function ShareButton({ title }: { title?: string }) {
         <Button
             variant="outline"
             onClick={handleShare}
-            className="gap-2 transition-all shadow-sm rounded-full text-zinc-500 hover:text-blue-600 hover:bg-blue-50/50 hover:border-blue-200 border-zinc-200"
+            className="gap-2 transition-all shadow-sm rounded-full text-muted-foreground hover:text-primary hover:bg-accent hover:border-primary/20 border-border"
         >
             {copied ? <Check size={18} /> : <Share2 size={18} />}
             <span>{copied ? "已复制长链接" : "转发 / 分享"}</span>

@@ -152,8 +152,8 @@ export default function AdminSettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
-            <ArrowLeft size={20} className="text-zinc-500" />
+          <Link href="/admin" className="p-2 hover:bg-muted rounded-full transition-colors">
+            <ArrowLeft size={20} className="text-muted-foreground" />
           </Link>
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
@@ -180,12 +180,12 @@ export default function AdminSettings() {
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-zinc-600">网站主标题</label>
+                <label className="text-sm font-bold text-foreground/70">网站主标题</label>
                 <Input
                   value={siteTitle}
                   onChange={(e) => setSiteTitle(e.target.value)}
                   placeholder="例如：Shawn's BLOG"
-                  className="rounded-xl border-zinc-200"
+                  className="rounded-xl border-border"
                 />
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function AdminSettings() {
                   </div>
                 </div>
               ))}
-              <label className="aspect-video rounded-2xl border-2 border-dashed border-zinc-200 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer text-zinc-400 hover:text-primary">
+              <label className="aspect-video rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-primary">
                 <Plus size={24} />
                 <span className="text-xs font-bold uppercase tracking-widest">添加封面</span>
                 <input

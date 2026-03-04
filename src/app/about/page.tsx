@@ -66,7 +66,7 @@ export default function AboutPage() {
             >
               <Button
                 variant="outline"
-                className="gap-2 border-zinc-200 hover:bg-zinc-100 hover:text-black"
+                className="gap-2 border-border hover:bg-muted"
               >
                 <Github size={18} /> GitHub
               </Button>

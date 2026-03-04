@@ -145,7 +145,7 @@ export default async function Home({
               );
             })}
             {moments?.length === 0 && (
-              <p className="text-zinc-400 text-center col-span-2 py-10">
+              <p className="text-muted-foreground text-center col-span-2 py-10">
                 未找到相关动态
               </p>
             )}
