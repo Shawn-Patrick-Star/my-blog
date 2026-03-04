@@ -36,22 +36,22 @@ export function QuoteCard({ quotes }: QuoteCardProps) {
 
     return (
         <div className="relative w-full my-12">
-            <div className="relative bg-[#fdf6e3] rounded-2xl shadow-lg border border-amber-200/60 p-8 md:p-12 overflow-hidden">
+            <div className="relative bg-paper-bg rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-paper-border p-8 md:p-12 overflow-hidden transition-all duration-300">
                 {/* 作文纸条横线 */}
                 <div
-                    className="absolute inset-0 pointer-events-none opacity-[0.08]"
+                    className="absolute inset-0 pointer-events-none opacity-[0.08] dark:opacity-[0.05]"
                     style={{
-                        backgroundImage: "repeating-linear-gradient(transparent, transparent 2.4rem, #8b7355 2.4rem, #8b7355 calc(2.4rem + 1px))",
+                        backgroundImage: "repeating-linear-gradient(transparent, transparent 2.4rem, hsl(var(--paper-line)) 2.4rem, hsl(var(--paper-line)) calc(2.4rem + 1px))",
                     }}
                 />
 
                 {/* 红色竖线 (作文纸风格) */}
-                <div className="absolute left-6 md:left-8 top-0 bottom-0 w-[2px] bg-red-300/40" />
+                <div className="absolute left-6 md:left-8 top-0 bottom-0 w-[2px] bg-paper-margin/40 dark:bg-paper-margin/20" />
 
-                <div className="relative z-10 flex flex-col items-center text-center pl-4 md:pl-6">
-                    <Quote className="text-amber-400/50 mb-5 w-8 h-8" />
+                <div className="relative z-10 flex flex-col items-center text-center pl-4 md:pl-6 text-paper-text">
+                    <Quote className="text-paper-line/30 mb-5 w-8 h-8" />
 
-                    <div className="min-h-24 flex flex-col items-center justify-center gap-3">
+                    <div className="min-h-24 flex flex-col items-center justify-center gap-3 text-inherit transition-colors">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentIndex}
@@ -61,11 +61,11 @@ export function QuoteCard({ quotes }: QuoteCardProps) {
                                 transition={{ duration: 0.8 }}
                                 className="flex flex-col items-center gap-3"
                             >
-                                <p className="text-xl md:text-2xl font-serif italic text-amber-950/80 leading-relaxed font-medium">
+                                <p className="text-xl md:text-2xl font-serif italic leading-relaxed font-medium">
                                     「{current.text}」
                                 </p>
                                 {current.source && (
-                                    <span className="text-sm text-amber-700/60 font-medium tracking-wider">
+                                    <span className="text-sm opacity-60 font-medium tracking-wider">
                                         —— {current.source}
                                     </span>
                                 )}
@@ -73,7 +73,7 @@ export function QuoteCard({ quotes }: QuoteCardProps) {
                         </AnimatePresence>
                     </div>
 
-                    <div className="mt-6 w-16 h-0.5 bg-amber-300/40 rounded-full" />
+                    <div className="mt-6 w-16 h-0.5 bg-paper-line/20 rounded-full" />
                 </div>
             </div>
         </div>

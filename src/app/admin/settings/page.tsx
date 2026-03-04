@@ -266,23 +266,23 @@ export default function AdminSettings() {
 
             <div className="space-y-3">
               {siteQuotes.map((quote, index) => (
-                <div key={index} className="flex items-start justify-between p-4 bg-[#fdf6e3]/60 rounded-2xl border border-amber-200/40 group">
+                <div key={index} className="flex items-start justify-between p-4 bg-paper-bg/60 rounded-2xl border border-paper-border/60 group transition-colors duration-300">
                   <div className="flex-1">
-                    <p className="text-zinc-700 italic font-serif">「 {quote.text} 」</p>
+                    <p className="text-paper-text italic font-serif">「 {quote.text} 」</p>
                     {quote.source && (
-                      <p className="text-xs text-amber-600/70 mt-1 font-medium">—— {quote.source}</p>
+                      <p className="text-xs text-paper-line/70 mt-1 font-medium">—— {quote.source}</p>
                     )}
                   </div>
                   <button
                     onClick={() => removeQuote(index)}
-                    className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
               ))}
               {siteQuotes.length === 0 && (
-                <p className="text-center py-6 text-zinc-400 text-sm">还没有添加任何句子</p>
+                <p className="text-center py-6 text-muted-foreground text-sm">还没有添加任何句子</p>
               )}
             </div>
           </CardContent>

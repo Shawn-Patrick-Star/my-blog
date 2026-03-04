@@ -97,16 +97,16 @@ export default function AdminMoments() {
   }
 
   return (
-    <div className="max-w-md mx-auto py-10 px-4">
+    <div className="max-w-md mx-auto py-10 px-4 transition-colors duration-300">
       {/* 顶部导航 */}
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/admin"
-          className="text-zinc-400 hover:text-amber-600 transition-colors"
+          className="text-muted-foreground hover:text-paper-line transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-xl font-bold text-zinc-800">发布新动态</h1>
+        <h1 className="text-xl font-bold text-paper-text">发布新动态</h1>
       </div>
 
       <div className="space-y-4">
@@ -114,7 +114,7 @@ export default function AdminMoments() {
           placeholder="分享新鲜事..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="min-h-30 resize-none border-amber-100 bg-[#fffef9] focus-visible:ring-amber-200"
+          className="min-h-30 resize-none border-paper-border bg-paper-bg focus-visible:ring-paper-line/30 text-paper-text"
         />
 
         {/* 图片预览 (九宫格) */}
@@ -123,7 +123,7 @@ export default function AdminMoments() {
             {previews.map((url, index) => (
               <div
                 key={index}
-                className="relative aspect-square rounded-lg overflow-hidden border border-amber-100 shadow-sm"
+                className="relative aspect-square rounded-lg overflow-hidden border border-paper-border shadow-sm"
               >
                 <img
                   src={url}
@@ -142,10 +142,10 @@ export default function AdminMoments() {
         )}
 
         {/* 图片选择器 */}
-        <div className="relative border-2 border-dashed border-amber-100 rounded-xl bg-amber-50/30 p-4 hover:border-amber-200 transition-colors">
+        <div className="relative border-2 border-dashed border-paper-border rounded-xl bg-paper-bg/50 p-4 hover:border-paper-line/30 transition-colors">
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
-            <ImageIcon className="w-6 h-6 text-amber-400" />
-            <span className="text-sm text-zinc-500">
+            <ImageIcon className="w-6 h-6 text-paper-line/60" />
+            <span className="text-sm text-paper-text/60">
               {selectedFiles.length > 0
                 ? `已选中 ${selectedFiles.length}/9 张`
                 : "点击选择图片"}
@@ -161,14 +161,14 @@ export default function AdminMoments() {
         </div>
 
         {isPending && (
-          <p className="text-xs text-center text-amber-500 animate-pulse">
+          <p className="text-xs text-center text-paper-line animate-pulse">
             {progress}
           </p>
         )}
 
         <Button
           onClick={handleSubmit}
-          className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-100"
+          className="w-full bg-paper-line hover:bg-paper-line/90 text-white dark:text-paper-bg shadow-lg shadow-paper-line/20"
           disabled={isPending}
         >
           {isPending ? (

@@ -33,24 +33,33 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Search and Main Tabs */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="relative w-full md:max-w-md group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+        <div className="space-y-4 w-full relative z-10">
+            {/* 1. 主控行：搜索框 + 视图切换 (桌面端单行，移动端自适应折行) */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-3 w-full">
+                
+                {/* 左侧搜索框：占据剩余的弹性空间 */}
+                <div className="relative w-full md:flex-1 group">
+                    <Search 
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-300" 
+                        size={18} 
+                    />
                     <Input
                         placeholder="搜索笔记标题或内容..."
-                        className="pl-10 bg-card border-border focus-visible:ring-primary/20"
+                        className="h-12 pl-10 pr-4 w-full bg-background/60 border-border/50 rounded-2xl focus-visible:ring-primary/30 focus-visible:bg-background focus-visible:border-primary/50 shadow-sm transition-all text-base md:text-sm placeholder:text-muted-foreground/50"
                         defaultValue={currentQuery}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                                updateParams({ q: e.currentTarget.value || null, view: e.currentTarget.value ? "search" : "timeline" });
+                                updateParams({ 
+                                    q: e.currentTarget.value || null, 
+                                    view: e.currentTarget.value ? "search" : "timeline" 
+                                });
                             }
                         }}
                     />
                 </div>
 
-                <div className="flex bg-secondary/50 p-1.5 rounded-2xl border border-border shadow-inner self-stretch md:self-auto">
+                {/* 右侧视图切换器：内阴影毛玻璃效果，包裹按钮 */}
+                <div className="flex items-center p-1.5 bg-secondary/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-inner w-full md:w-auto shrink-0 overflow-x-auto scrollbar-hide">
                     {[
                         { id: "timeline", label: "时间线", icon: Clock },
                         { id: "category", label: "分类", icon: ListFilter },
@@ -62,27 +71,34 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                             size="sm"
                             onClick={() => updateParams({ view: tab.id, cat: null, tag: null, q: null })}
                             className={cn(
-                                "rounded-xl px-5 h-9 flex items-center gap-2 transition-all duration-300",
+                                "rounded-xl px-4 md:px-5 h-9 flex items-center gap-2 transition-all duration-300 font-medium whitespace-nowrap",
                                 currentView === tab.id
-                                    ? "bg-background text-primary shadow-md font-black ring-1 ring-black/5"
+                                    ? "bg-background text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                                     : "text-muted-foreground hover:text-foreground hover:bg-background/40"
                             )}
                         >
-                            <tab.icon size={14} className={cn("transition-transform duration-500", currentView === tab.id && "scale-110")} />
+                            <tab.icon size={15} className={cn(
+                                "transition-transform duration-500", 
+                                currentView === tab.id ? "scale-110" : "opacity-70"
+                            )} />
                             {tab.label}
                         </Button>
                     ))}
                 </div>
             </div>
 
-            {/* Sub-Filters for Category and Tag */}
+            {/* 2. 展开的子过滤器：分类 (平滑下拉动画 + 柔和容器包裹) */}
             {currentView === "category" && (
-                <div className="flex flex-wrap gap-2 py-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex flex-wrap items-center gap-2.5 p-3 md:px-4 bg-secondary/20 rounded-2xl border border-border/40 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                    <span className="text-sm font-medium text-muted-foreground/70 mr-2 shrink-0">按分类浏览：</span>
                     <Button
                         variant={!currentCat ? "default" : "outline"}
                         size="sm"
                         onClick={() => updateParams({ cat: null })}
-                        className="rounded-full px-5"
+                        className={cn(
+                            "rounded-full px-5 h-8 transition-all duration-300",
+                            !currentCat ? "shadow-md shadow-primary/20" : "bg-background border-border/50 hover:bg-secondary"
+                        )}
                     >
                         全部
                     </Button>
@@ -92,7 +108,10 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                             variant={currentCat === cat ? "default" : "outline"}
                             size="sm"
                             onClick={() => updateParams({ cat })}
-                            className="rounded-full px-5"
+                            className={cn(
+                                "rounded-full px-5 h-8 transition-all duration-300",
+                                currentCat === cat ? "shadow-md shadow-primary/20" : "bg-background border-border/50 hover:bg-secondary"
+                            )}
                         >
                             {cat}
                         </Button>
@@ -100,13 +119,18 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                 </div>
             )}
 
+            {/* 3. 展开的子过滤器：标签 (平滑下拉动画 + 柔和容器包裹) */}
             {currentView === "tag" && (
-                <div className="flex flex-wrap gap-2 py-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex flex-wrap items-center gap-2.5 p-3 md:px-4 bg-secondary/20 rounded-2xl border border-border/40 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                    <span className="text-sm font-medium text-muted-foreground/70 mr-2 shrink-0">按标签浏览：</span>
                     <Button
                         variant={!currentTag ? "default" : "outline"}
                         size="sm"
                         onClick={() => updateParams({ tag: null })}
-                        className="rounded-full px-5"
+                        className={cn(
+                            "rounded-full px-5 h-8 transition-all duration-300",
+                            !currentTag ? "shadow-md shadow-primary/20" : "bg-background border-border/50 hover:bg-secondary"
+                        )}
                     >
                         全部
                     </Button>
@@ -116,7 +140,10 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                             variant={currentTag === tag ? "default" : "outline"}
                             size="sm"
                             onClick={() => updateParams({ tag })}
-                            className="rounded-full px-5"
+                            className={cn(
+                                "rounded-full px-5 h-8 transition-all duration-300",
+                                currentTag === tag ? "shadow-md shadow-primary/20" : "bg-background border-border/50 hover:bg-secondary"
+                            )}
                         >
                             {tag}
                         </Button>

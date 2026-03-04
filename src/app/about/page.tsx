@@ -11,22 +11,22 @@ const BilibiliIcon = () => (
 export default function AboutPage() {
   return (
     <div className="max-w-2xl mx-auto py-16 px-4">
-      <div className="bg-[#fffef9] p-8 md:p-10 rounded-2xl border border-amber-100/50 shadow-sm">
+      <div className="bg-paper-bg p-8 md:p-10 rounded-2xl border border-paper-border shadow-sm transition-colors duration-300">
         {/* 头部 */}
         <div className="text-center mb-10">
-          <div className="w-20 h-20 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4 border-2 border-amber-200">
+          <div className="w-20 h-20 mx-auto bg-paper-line/10 rounded-full flex items-center justify-center mb-4 border-2 border-paper-border">
             <span className="text-3xl">🌱</span>
           </div>
-          <h1 className="text-3xl font-bold text-zinc-800">关于我</h1>
-          <p className="text-zinc-500 mt-2">一个热爱学习的开发者</p>
+          <h1 className="text-3xl font-bold text-paper-text">关于我</h1>
+          <p className="text-muted-foreground mt-2">一个热爱学习的开发者</p>
         </div>
 
         {/* 个人介绍 */}
-        <div className="prose prose-zinc prose-amber max-w-none mb-10">
-          <p className="text-zinc-600 leading-relaxed">
-            你好！欢迎来到我的个人空间。這里记录了我在学习编程过程中的思考、笔记和生活碎片。
+        <div className="prose dark:prose-invert max-w-none mb-10">
+          <p className="text-paper-text/80 leading-relaxed">
+            你好！欢迎来到我的个人空间。這里记录了我在学习编程过程中的思考、笔记 and 生活碎片。
           </p>
-          <p className="text-zinc-600 leading-relaxed">
+          <p className="text-paper-text/80 leading-relaxed">
             我相信学习是一个持续积累的过程，每一个小小的记录都有它的价值。
             希望这里的内容也能对你有所帮助。
           </p>
@@ -34,8 +34,8 @@ export default function AboutPage() {
 
         {/* 技能标签 */}
         <div className="mb-10">
-          <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-amber-400 rounded-full" />
+          <h2 className="text-lg font-semibold text-paper-text mb-4 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-paper-line rounded-full" />
             技术栈
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -43,7 +43,7 @@ export default function AboutPage() {
               (skill) => (
                 <span
                   key={skill}
-                  className="px-3 py-1.5 bg-amber-50 text-amber-700 text-sm rounded-full border border-amber-100 font-medium"
+                  className="px-3 py-1.5 bg-paper-line/10 text-paper-line text-sm rounded-full border border-paper-border/50 font-medium"
                 >
                   {skill}
                 </span>
@@ -53,8 +53,8 @@ export default function AboutPage() {
         </div>
 
         {/* 社交链接 */}
-        <div className="border-t border-amber-100 pt-8">
-          <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
+        <div className="border-t border-paper-border pt-8">
+          <h2 className="text-lg font-semibold text-paper-text mb-4 flex items-center gap-2">
             <span className="w-1.5 h-6 bg-blue-400 rounded-full" />
             关注我
           </h2>

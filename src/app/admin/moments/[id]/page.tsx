@@ -20,15 +20,15 @@ export default async function EditMomentPage({
   if (!moment) notFound();
 
   return (
-    <div className="max-w-md mx-auto py-10 px-4">
+    <div className="max-w-md mx-auto py-10 px-4 transition-colors duration-300">
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/admin"
-          className="text-zinc-400 hover:text-amber-600 transition-colors"
+          className="text-muted-foreground hover:text-paper-line transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-xl font-bold text-zinc-800">编辑动态</h1>
+        <h1 className="text-xl font-bold text-paper-text">编辑动态</h1>
       </div>
       <EditMomentForm moment={moment} />
     </div>

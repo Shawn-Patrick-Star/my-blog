@@ -13,14 +13,14 @@ export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <Card className="w-full max-w-sm border-amber-100/50 shadow-lg bg-[#fffef9]">
+    <div className="flex min-h-[80vh] items-center justify-center px-4 transition-colors duration-300">
+      <Card className="w-full max-w-sm border-paper-border shadow-lg bg-paper-bg/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-2">
-            <Lock className="w-5 h-5 text-amber-600" />
+          <div className="mx-auto w-12 h-12 bg-paper-line/10 rounded-full flex items-center justify-center mb-2">
+            <Lock className="w-5 h-5 text-paper-line" />
           </div>
-          <CardTitle className="text-2xl font-bold text-zinc-800">管理员登录</CardTitle>
-          <CardDescription>请输入密码进入控制台</CardDescription>
+          <CardTitle className="text-2xl font-bold text-paper-text">管理员登录</CardTitle>
+          <CardDescription className="opacity-70 text-paper-text">请输入密码进入控制台</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-4">
@@ -30,19 +30,19 @@ export default function LoginPage() {
                 name="password"
                 placeholder="Password"
                 required
-                className="bg-white border-amber-100 focus-visible:ring-amber-200"
+                className="bg-background/50 border-paper-border focus-visible:ring-paper-line/30 text-paper-text"
               />
             </div>
 
             {state?.error && (
-              <p className="text-sm text-red-500 font-medium text-center bg-red-50 py-2 rounded-lg">
+              <p className="text-sm text-red-500 font-medium text-center bg-red-500/10 py-2 rounded-lg">
                 {state.error}
               </p>
             )}
 
             <Button
               type="submit"
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-100"
+              className="w-full bg-paper-line hover:bg-paper-line/90 text-white dark:text-paper-bg shadow-lg shadow-paper-line/20"
               disabled={isPending}
             >
               {isPending ? "登录中..." : "进入后台"}

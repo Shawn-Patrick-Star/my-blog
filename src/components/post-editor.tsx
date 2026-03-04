@@ -227,7 +227,7 @@ export function PostEditor({
                 defaultTags={initialData?.tags || []}
                 placeholder="输入标签后按回车..."
                 inputClassName="bg-card border-border focus-visible:ring-ring"
-                badgeClassName="bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
+                badgeClassName="bg-secondary text-secondary-foreground border-border/50 hover:bg-secondary/80"
               />
             </div>
 

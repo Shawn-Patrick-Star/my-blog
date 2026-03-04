@@ -30,12 +30,19 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  /* Paper Theme Tokens */
+  --color-paper-bg: hsl(var(--paper-bg));
+  --color-paper-line: hsl(var(--paper-line));
+  --color-paper-border: hsl(var(--paper-border));
+  --color-paper-margin: hsl(var(--paper-margin));
+  --color-paper-text: hsl(var(--paper-text));
 }
 
 @layer base {
   :root {
     /* Elegant Minimalism - White & Indigo */
-    --background: 240 10% 98%;
+    --background: 0 0% 98%;
     --foreground: 240 10% 4%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 4%;
@@ -59,28 +66,47 @@
     --input: 240 5.9% 82%;
     --ring: 226 70% 50%;
     --radius: 1rem;
+
+    /* Paper Theme - Warm Style */
+    --paper-bg: 43 74% 94%;      /* #fdf6e3 */
+    --paper-line: 33 24% 44%;    /* #8b7355 */
+    --paper-border: 33 60% 85%;  /* #f3e9d2 */
+    --paper-margin: 0 91% 81%;   /* #fca5a5 */
+    --paper-text: 20 91% 14%;    /* #451a03 */
   }
 
   .dark {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 226 70% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 226 70% 15%;
-    --accent-foreground: 226 70% 90%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 226 70% 60%;
+    /* Dracula-inspired Premium Dark Theme */
+    --background: 231 16% 16%;
+    /* #232530 */
+    --foreground: 60 30% 96%;
+    /* #f8f8f2 */
+    --card: 231 15% 18%;
+    /* #282a36 */
+    --card-foreground: 60 30% 96%;
+    --popover: 231 15% 20%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 250 100% 75%;
+    /* Vibrant Indigo/Purple */
+    --primary-foreground: 231 16% 16%;
+    --secondary: 231 15% 25%;
+    --secondary-foreground: 60 30% 96%;
+    --muted: 231 15% 25%;
+    --muted-foreground: 225 20% 65%;
+    --accent: 231 15% 30%;
+    --accent-foreground: 60 30% 100%;
+    --destructive: 0 100% 67%;
+    --destructive-foreground: 231 16% 16%;
+    --border: 231 15% 28%;
+    --input: 231 15% 28%;
+    --ring: 250 100% 75%;
+
+    /* Paper Theme - Dark Style */
+    --paper-bg: 231 15% 20%;
+    --paper-line: 250 100% 75%;
+    --paper-border: 231 15% 28%;
+    --paper-margin: 0 84% 60%;
+    --paper-text: 60 30% 96%;
   }
 }
 
@@ -89,6 +115,13 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   @apply transition-colors duration-300;
+}
+
+.dark body {
+  background-image: radial-gradient(circle at top center,
+      hsl(var(--card) / 0.5) 0%,
+      hsl(var(--background)) 100%);
+  background-attachment: fixed;
 }
 
 

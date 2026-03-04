@@ -70,21 +70,21 @@ export function MomentCard({
   };
 
   return (
-    <Card className="w-full border-border shadow-sm hover:shadow-md transition-shadow bg-card group relative dark:bg-zinc-900 dark:border-zinc-800">
+    <Card className="w-full border-border shadow-sm hover:shadow-md transition-shadow bg-card group relative">
       <CardHeader className="flex flex-row items-center gap-3 p-4 pb-2">
-        <div className="h-10 w-10 rounded-full bg-accent border border-border flex items-center justify-center font-bold text-primary text-sm dark:bg-amber-900/30 dark:border-amber-900/50">
+        <div className="h-10 w-10 rounded-full bg-accent border border-border flex items-center justify-center font-bold text-primary text-sm">
           Me
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-foreground dark:text-zinc-200">我的动态</span>
-          <span className="text-xs text-muted-foreground dark:text-zinc-500">
+          <span className="text-sm font-semibold text-foreground">我的动态</span>
+          <span className="text-xs text-muted-foreground">
             {format(new Date(createdAt), "yyyy-MM-dd HH:mm")}
           </span>
         </div>
       </CardHeader>
 
       <CardContent className="px-4 pb-4">
-        <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap mb-2 dark:text-zinc-300">
+        <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap mb-2">
           {content}
         </p>
 
@@ -102,7 +102,7 @@ export function MomentCard({
                 key={index}
                 src={url}
                 alt="moment"
-                className="rounded-lg object-cover w-full aspect-square"
+                className="rounded-lg object-cover w-full aspect-square border border-border/10"
               />
             ))}
           </div>
@@ -112,7 +112,7 @@ export function MomentCard({
           {id && <LikeButton targetId={id} targetType="moment" initialLikes={likes} isSmall />}
           <button
             onClick={() => setIsReplying(!isReplying)}
-            className="text-xs text-muted-foreground hover:text-primary px-3 py-1.5 rounded-full hover:bg-accent transition-colors flex items-center gap-1 border border-transparent hover:border-border dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-amber-500"
+            className="text-xs text-muted-foreground hover:text-primary px-3 py-1.5 rounded-full hover:bg-accent transition-colors flex items-center gap-1 border border-transparent hover:border-border"
           >
             <MessageCircle size={14} /> 评论
           </button>
@@ -120,17 +120,17 @@ export function MomentCard({
 
         {/* 紧凑版评论列表 */}
         {comments.length > 0 && (
-          <div className="mt-3 bg-muted/40 p-3 rounded-xl border border-border space-y-2 dark:bg-zinc-800/30 dark:border-zinc-700/50">
+          <div className="mt-3 bg-muted/20 p-3 rounded-xl border border-border/50 space-y-2">
             {(isExpanded ? comments : comments.slice(0, 2)).map((comment) => (
               <div key={comment.id} className="text-sm">
-                <span className="font-semibold text-foreground dark:text-zinc-300 mr-2">{comment.author_name}:</span>
-                <span className="text-muted-foreground dark:text-zinc-400 wrap-break-word">{comment.content}</span>
+                <span className="font-semibold text-foreground mr-2">{comment.author_name}:</span>
+                <span className="text-muted-foreground wrap-break-word">{comment.content}</span>
               </div>
             ))}
             {comments.length > 2 && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-xs text-primary hover:text-primary/80 font-medium mt-1 dark:text-amber-500"
+                className="text-xs text-primary hover:text-primary/90 font-medium mt-1"
               >
                 {isExpanded ? "收起" : `展开全部 ${comments.length} 条评论`}
               </button>
@@ -146,14 +146,14 @@ export function MomentCard({
               placeholder="昵称"
               required
               maxLength={20}
-              className="w-24 px-3 py-1.5 text-sm rounded-lg border border-border focus:outline-none focus:ring-1 focus:ring-primary bg-background dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+              className="w-24 px-3 py-1.5 text-sm rounded-lg border border-border focus:outline-none focus:ring-1 focus:ring-primary bg-background text-foreground"
             />
             <input
               name="content"
               placeholder="说点什么..."
               required
               maxLength={200}
-              className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-border focus:outline-none focus:ring-1 focus:ring-primary bg-background dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+              className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-border focus:outline-none focus:ring-1 focus:ring-primary bg-background text-foreground"
             />
             <Button
               type="submit"

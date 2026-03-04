@@ -13,15 +13,15 @@ interface SectionHeaderProps {
 
 export function SectionHeader({
     title,
-    accentColor = "bg-amber-400",
+    accentColor = "bg-primary",
     actionLabel,
     actionHref,
-    actionColorClass = "text-amber-600 border-amber-200 hover:bg-amber-50",
+    actionColorClass = "text-primary border-border hover:bg-accent",
     showAction = false,
 }: SectionHeaderProps) {
     return (
         <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2 text-zinc-800">
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-foreground">
                 <span className={`w-2 h-8 ${accentColor} rounded-full`} />
                 {title}
             </h2>
