@@ -1,53 +1,50 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Camera } from "lucide-react";
+import { HeroSlider } from "./hero-slider";
 
 // 定义组件接收的参数类型
 interface HeroSectionProps {
-  initialImage: string; // 图片 URL
+  images?: string[];    // 图片 URL 数组
+  initialImage?: string; // 旧的单图兼容
   title?: string;       // 标题 (可选)
-  isAdmin?: boolean; // 1. 接收这个新参数
+  isAdmin?: boolean;
 }
 
 export function HeroSection({
+  images = [],
   initialImage,
-  title = "Shawn's BLOG", // 默认标题
-  isAdmin = false // 默认为 false
+  title = "Shawn's BLOG",
+  isAdmin = false
 }: HeroSectionProps) {
-  // 默认兜底图 (以防数据库里没存或者存的是空字符串)
-  const displayImage = initialImage || "https://images.unsplash.com/photo-1490750967868-58cb75069faf?q=80&w=2070&auto=format&fit=crop";
+  // 优选 images 数组，如果没有则用单图转为数组
+  const displayImages = images.length > 0
+    ? images
+    : initialImage ? [initialImage] : [];
 
   return (
-    <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-sm group mb-10 bg-zinc-200">
+    <div className="relative w-full h-64 md:h-[400px] rounded-3xl overflow-hidden shadow-2xl group mb-10 bg-zinc-100">
 
-      <Image
-        src={displayImage}
-        alt="Hero Background"
-        fill
-        className="object-cover brightness-75 transition-transform duration-700 group-hover:scale-105"
-        priority
-      />
+      <HeroSlider images={displayImages} />
 
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10 pointer-events-none">
         <h1
-          className="font-fredoka text-5xl md:text-6xl font-bold tracking-wider drop-shadow-lg text-center px-4"
+          className="font-fredoka text-5xl md:text-7xl font-bold tracking-tight drop-shadow-2xl text-center px-4 animate-in fade-in zoom-in duration-1000"
         >
           {title}
         </h1>
-        <p className="mt-3 text-lg opacity-90 font-light tracking-widest text-amber-50">
+        <p className="mt-4 text-xl opacity-80 font-medium tracking-widest text-white/90 drop-shadow-md">
           记录 · 思考 · 生活
         </p>
       </div>
 
-      {/* 2. 只有当 isAdmin 为 true 时，才渲染这个 div */}
       {isAdmin && (
-        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+        <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 translate-y-2 group-hover:translate-y-0">
           <Link href="/admin/settings">
-            <button className="bg-black/30 hover:bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs flex items-center gap-2 border border-white/20 transition-colors cursor-pointer">
-              <Camera size={14} />
-              更换封面/标题
+            <button className="bg-white/10 hover:bg-white/20 backdrop-blur-xl text-white px-6 py-2.5 rounded-2xl text-sm font-bold flex items-center gap-2 border border-white/20 transition-all shadow-xl">
+              <Camera size={16} />
+              个性化配置
             </button>
           </Link>
         </div>

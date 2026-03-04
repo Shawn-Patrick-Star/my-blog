@@ -6,34 +6,36 @@ import { revalidatePath } from "next/cache";
 /** 更新站点配置（首页背景图、标题等） */
 export async function updateSiteConfig(formData: FormData): Promise<void> {
     const heroImageUrl = formData.get("hero_image_url") as string;
-    const heroImageFile = formData.get("hero_image") as File;
+    const heroImages = formData.get("hero_images") as string; // JSON string
     const siteTitle = formData.get("site_title") as string;
+    const siteQuotes = formData.get("site_quotes") as string; // JSON string
 
-    // 方案 A：客户端直传的 URL
+    // 1. 旧图兼容 (单图)
     if (heroImageUrl) {
         await supabase
             .from("site_config")
             .upsert({ key: "hero_image", value: heroImageUrl }, { onConflict: "key" });
     }
-    // 方案 B：服务端中转文件上传（备用）
-    else if (heroImageFile && heroImageFile.size > 0) {
-        const fileName = `hero-${Date.now()}-${heroImageFile.name}`;
-        const { error: uploadError } = await supabase.storage
-            .from("public-images")
-            .upload(fileName, heroImageFile);
 
-        if (!uploadError) {
-            const { data } = supabase.storage.from("public-images").getPublicUrl(fileName);
-            await supabase
-                .from("site_config")
-                .upsert({ key: "hero_image", value: data.publicUrl }, { onConflict: "key" });
-        }
+    // 2. 多图支持 (JSON 数组)
+    if (heroImages) {
+        await supabase
+            .from("site_config")
+            .upsert({ key: "hero_images", value: heroImages }, { onConflict: "key" });
     }
 
+    // 3. 网站标题
     if (siteTitle) {
         await supabase
             .from("site_config")
             .upsert({ key: "site_title", value: siteTitle }, { onConflict: "key" });
+    }
+
+    // 4. 哲理句子 (JSON 数组)
+    if (siteQuotes) {
+        await supabase
+            .from("site_config")
+            .upsert({ key: "site_quotes", value: siteQuotes }, { onConflict: "key" });
     }
 
     revalidatePath("/");

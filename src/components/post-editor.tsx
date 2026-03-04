@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
-import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft } from "lucide-react";
+import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save } from "lucide-react";
 import Image from "next/image";
 import type { ActionResult } from "@/lib/types";
 
@@ -37,11 +37,57 @@ export function PostEditor({
   const router = useRouter();
   const [isPreview, setIsPreview] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [autoSaved, setAutoSaved] = useState(false);
 
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [content, setContent] = useState(initialData?.content || "");
-  const [excerpt, setExcerpt] = useState(initialData?.excerpt || "");
-  const [category, setCategory] = useState(initialData?.category || "");
+  const draftKey = `draft-${initialData?.id || "new"}`;
+
+  // 初始化状态：优先从 localStorage 恢复草稿
+  const getInitial = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) return JSON.parse(saved);
+    } catch (e) { }
+    return null;
+  }, [draftKey]);
+
+  const draft = getInitial();
+  const hasDraft = draft !== null && !initialData?.id; // 只对新建文章提示恢复
+
+  const [title, setTitle] = useState(
+    hasDraft ? draft.title : (initialData?.title || "")
+  );
+  const [content, setContent] = useState(
+    hasDraft ? draft.content : (initialData?.content || "")
+  );
+  const [excerpt, setExcerpt] = useState(
+    hasDraft ? draft.excerpt : (initialData?.excerpt || "")
+  );
+  const [category, setCategory] = useState(
+    hasDraft ? draft.category : (initialData?.category || "")
+  );
+
+  // 自动保存: 1.5s debounce
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+
+    saveTimer.current = setTimeout(() => {
+      // 有内容才保存
+      if (title || content || excerpt || category) {
+        try {
+          localStorage.setItem(draftKey, JSON.stringify({ title, content, excerpt, category }));
+          setAutoSaved(true);
+          setTimeout(() => setAutoSaved(false), 2000);
+        } catch (e) { }
+      }
+    }, 1500);
+
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [title, content, excerpt, category, draftKey]);
 
   // 正文插图上传
   async function handleBodyImageUpload(
@@ -77,6 +123,8 @@ export function PostEditor({
 
       const result = await action(formData);
       if (result.success) {
+        // 发布成功，清除草稿
+        try { localStorage.removeItem(draftKey); } catch (e) { }
         router.push(`/blog/${result.slug || ""}`);
         router.refresh();
       } else if (result.error) {
@@ -105,6 +153,12 @@ export function PostEditor({
           <ArrowLeft size={20} />
         </Button>
         <h1 className="text-2xl font-bold text-foreground">{pageTitle}</h1>
+
+        {/* 自动保存指示器 */}
+        <div className={`ml-auto flex items-center gap-1.5 text-xs font-medium transition-all duration-500 ${autoSaved ? "opacity-100 text-emerald-500" : "opacity-0"}`}>
+          <Save size={12} />
+          <span>已自动保存</span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -5,6 +5,8 @@ import { BlogCard } from "@/components/blog-card";
 import { MomentCard } from "@/components/moment-card";
 import { SearchInput } from "@/components/search-input";
 import { SectionHeader } from "@/components/section-header";
+import { QuoteCard } from "@/components/quote-card";
+import type { QuoteItem } from "@/components/quote-card";
 
 export const revalidate = 0;
 
@@ -19,19 +21,30 @@ export default async function Home({
   const isAdmin = await checkIsAdmin();
 
   // 获取首页配置
-  const { data: imgConfig } = await supabase
+  const { data: configs } = await supabase
     .from("site_config")
-    .select("value")
-    .eq("key", "hero_image")
-    .single();
-  const heroImage = imgConfig?.value || "";
+    .select("key, value");
 
-  const { data: titleConfig } = await supabase
-    .from("site_config")
-    .select("value")
-    .eq("key", "site_title")
-    .single();
-  const siteTitle = titleConfig?.value || "Shawn's BLOG";
+  const heroImage = configs?.find(c => c.key === "hero_image")?.value || "";
+  const heroImagesStr = configs?.find(c => c.key === "hero_images")?.value;
+  let heroImages: string[] = [];
+  try {
+    if (heroImagesStr) heroImages = JSON.parse(heroImagesStr);
+  } catch (e) { }
+
+  const siteTitle = configs?.find(c => c.key === "site_title")?.value || "Shawn's BLOG";
+
+  const siteQuotesStr = configs?.find(c => c.key === "site_quotes")?.value;
+  let siteQuotes: QuoteItem[] = [];
+  try {
+    if (siteQuotesStr) {
+      const raw = JSON.parse(siteQuotesStr);
+      // 兼容旧格式: string[] -> QuoteItem[]
+      siteQuotes = raw.map((item: any) =>
+        typeof item === "string" ? { text: item } : item
+      );
+    }
+  } catch (e) { }
 
   // 构建查询 (支持搜索)
   let postQuery = supabase
@@ -72,6 +85,7 @@ export default async function Home({
         {/* Hero + 搜索 */}
         <section>
           <HeroSection
+            images={heroImages}
             initialImage={heroImage}
             title={siteTitle}
             isAdmin={isAdmin}
@@ -80,6 +94,9 @@ export default async function Home({
             <SearchInput defaultValue={query} />
           </div>
         </section>
+
+        {/* 句子卡片 */}
+        {!query && <QuoteCard quotes={siteQuotes} />}
 
         {/* 最新笔记 */}
         <section>
