@@ -3,9 +3,10 @@ import { checkIsAdmin } from "@/lib/auth";
 import { BlogCard } from "@/components/blog-card";
 import { BlogFilters } from "@/components/blog/blog-filters";
 import { BlogTimeline } from "@/components/blog/blog-timeline";
-import { BookOpen, SearchX, Sparkles } from "lucide-react";
+import { SearchX, Sparkles } from "lucide-react";
 import { getCategories, getTags } from "@/lib/actions/post";
 import type { Post } from "@/lib/types";
+import { Suspense } from "react";
 
 export const revalidate = 0;
 
@@ -85,7 +86,9 @@ export default async function BlogListPage({
              当你往下滚动文章时，搜索栏会优雅地悬浮在顶部
           */}
           <div className="sticky top-4 z-40 p-2 md:p-3 bg-background/70 backdrop-blur-xl border border-border/60 rounded-2xl shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition-all">
-            <BlogFilters categories={categories} tags={tags} />
+            <Suspense fallback={<div className="h-12 w-full animate-pulse bg-muted rounded-2xl" />}>
+              <BlogFilters categories={categories} tags={tags} />
+            </Suspense>
           </div>
         </header>
 
