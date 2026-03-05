@@ -1,9 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { checkIsAdmin } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import "highlight.js/styles/github-dark.css";
 import { format } from "date-fns";
-import { Hash, FileText, ArrowLeft } from "lucide-react";
+import { Hash, FileText, ArrowLeft, User as UserIcon } from "lucide-react";
 import { PostAdminActions } from "@/components/post-admin-actions";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import Link from "next/link";
@@ -21,10 +21,11 @@ export default async function BlogPost({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const supabase = await createClient();
 
   const { data: post } = await supabase
     .from("posts")
-    .select("*")
+    .select("*, author:profiles!author_id(*)")
     .eq("slug", slug)
     .single();
   if (!post) notFound();
@@ -113,47 +114,47 @@ export default async function BlogPost({
             {/* 文章卡片（不含评论） */}
             <article className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all">
               {/* 卡片顶部元数据信息 */}
-             <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
-              {/* 使用 grid 布局精确控制 */}
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
-                {/* 左侧文字区域 */}
-                <div className="space-y-4">
-                  {/* 第一行：日期和字数 - 使用 flex 确保在一行 */}
-                  <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
-                    <time dateTime={post.created_at}>
-                      发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
-                    </time>
-                    {post.word_count > 0 && (
-                      <>
-                        <span className="opacity-50">•</span>
-                        <span className="flex items-center gap-1.5">
-                          <FileText size={14} /> {post.word_count} 字
-                        </span>
-                      </>
+              <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
+                {/* 使用 grid 布局精确控制 */}
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
+                  {/* 左侧文字区域 */}
+                  <div className="space-y-4">
+                    {/* 第一行：日期和字数 - 使用 flex 确保在一行 */}
+                    <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
+                      <time dateTime={post.created_at}>
+                        发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
+                      </time>
+                      {post.word_count > 0 && (
+                        <>
+                          <span className="opacity-50">•</span>
+                          <span className="flex items-center gap-1.5">
+                            <FileText size={14} /> {post.word_count} 字
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* 第二行：标签 */}
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tag: string) => (
+                          <span key={tag} className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase">
+                            <Hash size={12} className="inline mr-1 opacity-50" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  
-                  {/* 第二行：标签 */}
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.map((tag: string) => (
-                        <span key={tag} className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase">
-                          <Hash size={12} className="inline mr-1 opacity-50" />
-                          {tag}
-                        </span>
-                      ))}
+
+                  {/* 右侧图标 - 固定在右上角，与第一行对齐 */}
+                  {isAdmin && (
+                    <div className="flex items-center gap-1 md:mt-0 md:self-start">
+                      <PostAdminActions postId={post.id} />
                     </div>
                   )}
                 </div>
-
-                {/* 右侧图标 - 固定在右上角，与第一行对齐 */}
-                {isAdmin && (
-                  <div className="flex items-center gap-1 md:mt-0 md:self-start">
-                    <PostAdminActions postId={post.id} />
-                  </div>
-                )}
-              </div>
-            </header>
+              </header>
 
               {/* Markdown 正文 */}
               <div className="p-6 md:p-10 lg:p-12">

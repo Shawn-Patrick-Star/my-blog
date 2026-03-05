@@ -1,11 +1,12 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 
 /** 点赞文章 */
 export async function likePost(postId: string): Promise<void> {
+    const supabase = await createClient();
     const userWithProfile = await getCurrentUser();
 
     // 乐观增加点赞数
@@ -41,6 +42,7 @@ export async function likePost(postId: string): Promise<void> {
 
 /** 点赞动态 */
 export async function likeMoment(momentId: string): Promise<void> {
+    const supabase = await createClient();
     const userWithProfile = await getCurrentUser();
 
     const { data: moment, error: selectError } = await supabase
@@ -69,12 +71,14 @@ export async function likeMoment(momentId: string): Promise<void> {
     }
 
     revalidatePath("/");
+    revalidatePath("/community");
     revalidatePath("/admin/moments/[id]", "page");
 }
 
 /** 添加评论 */
 export async function createComment(formData: FormData): Promise<{ success: boolean; error?: string }> {
     try {
+        const supabase = await createClient();
         const userWithProfile = await getCurrentUser();
         if (!userWithProfile) {
             return { success: false, error: "请先登录后再发表评论" };
@@ -121,6 +125,7 @@ export async function createComment(formData: FormData): Promise<{ success: bool
 
         revalidatePath("/");
         revalidatePath("/blog");
+        revalidatePath("/community");
         revalidatePath(`/blog/[slug]`, "page");
         return { success: true };
     } catch (err: any) {
@@ -130,8 +135,10 @@ export async function createComment(formData: FormData): Promise<{ success: bool
 
 /** 删除评论 (仅管理员) */
 export async function deleteComment(id: string): Promise<void> {
+    const supabase = await createClient();
     const { error } = await supabase.from("comments").delete().eq("id", id);
     if (error) throw new Error(error.message);
     revalidatePath("/");
+    revalidatePath("/community");
     revalidatePath(`/blog/[slug]`, "page");
 }

@@ -52,14 +52,14 @@ export default async function Home({
   // 构建查询 (支持搜索)
   let postQuery = supabase
     .from("posts")
-    .select("*, author:profiles(*)")
+    .select("*, author:profiles!author_id(*)")
     .eq("is_published", true)
     .order("created_at", { ascending: false });
 
   // 首页动态仅显示高赞或最新的前 4 个
   let momentQuery = supabase
     .from("moments")
-    .select("*, author:profiles(*)")
+    .select("*, author:profiles!author_id(*)")
     .order("likes", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -147,6 +147,7 @@ export default async function Home({
                   likes={item.likes}
                   comments={momentComments}
                   isAdmin={isAdmin}
+                  author={item.author}
                 />
               );
             })}

@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { uploadImage } from "@/lib/upload";
 import type { ActionResult } from "@/lib/types";
@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 /** 创建文章 */
 export async function createPost(formData: FormData): Promise<ActionResult> {
+    const supabase = await createClient();
     const title = formData.get("title") as string;
     const content = formData.get("content") as string;
     const excerpt = formData.get("excerpt") as string;
@@ -55,6 +56,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
 
 /** 更新文章 */
 export async function updatePost(formData: FormData): Promise<ActionResult> {
+    const supabase = await createClient();
     const id = formData.get("id") as string;
     const title = formData.get("title") as string;
     const content = formData.get("content") as string;
@@ -101,6 +103,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
 
 /** 删除文章 */
 export async function deletePost(id: string): Promise<void> {
+    const supabase = await createClient();
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) throw new Error(error.message);
     revalidatePath("/");
@@ -109,6 +112,7 @@ export async function deletePost(id: string): Promise<void> {
 
 /** 获取所有分类 */
 export async function getCategories(): Promise<string[]> {
+    const supabase = await createClient();
     const { data, error } = await supabase
         .from("posts")
         .select("category")
@@ -121,6 +125,7 @@ export async function getCategories(): Promise<string[]> {
 
 /** 获取所有标签 */
 export async function getTags(): Promise<string[]> {
+    const supabase = await createClient();
     const { data, error } = await supabase
         .from("posts")
         .select("tags")

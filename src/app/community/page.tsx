@@ -23,7 +23,7 @@ export default async function CommunityPage({
     // 获取所有动态
     let momentQuery = supabase
         .from("moments")
-        .select("*, author:profiles(*)")
+        .select("*, author:profiles!author_id(*)")
         .order("created_at", { ascending: false });
 
     if (query) {
@@ -80,6 +80,7 @@ export default async function CommunityPage({
                                 likes={item.likes}
                                 comments={momentComments}
                                 isAdmin={isAdmin}
+                                author={item.author}
                             />
                         );
                     })}

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { MomentCard } from "@/components/moment-card";
 import { BlogCard } from "@/components/blog-card";
 import { User, BookOpen, Camera, Calendar } from "lucide-react";
@@ -12,6 +12,7 @@ export default async function UserProfilePage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
+    const supabase = await createClient();
 
     // 获取用户信息
     const { data: profile } = await supabase
@@ -28,13 +29,13 @@ export default async function UserProfilePage({
     const [{ data: posts }, { data: moments }] = await Promise.all([
         supabase
             .from("posts")
-            .select("*, author:profiles(*)")
+            .select("*, author:profiles!author_id(*)")
             .eq("author_id", id)
             .eq("is_published", true)
             .order("created_at", { ascending: false }),
         supabase
             .from("moments")
-            .select("*, author:profiles(*)")
+            .select("*, author:profiles!author_id(*)")
             .eq("author_id", id)
             .order("created_at", { ascending: false }),
     ]);

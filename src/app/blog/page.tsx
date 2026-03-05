@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { checkIsAdmin } from "@/lib/auth";
 import { BlogCard } from "@/components/blog-card";
 import { BlogFilters } from "@/components/blog/blog-filters";
@@ -25,6 +25,8 @@ export default async function BlogListPage({
   const cat = params.cat || "";
   const tag = params.tag || "";
 
+  const supabase = await createClient();
+
   // 1. Fetch data for filters
   const categories = await getCategories();
   const tags = await getTags();
@@ -32,7 +34,7 @@ export default async function BlogListPage({
   // 2. Base query for posts
   let supabaseQuery = supabase
     .from("posts")
-    .select("*")
+    .select("*, author:profiles!author_id(*)")
     .eq("is_published", true)
     .order("created_at", { ascending: false });
 
@@ -69,7 +71,7 @@ export default async function BlogListPage({
               <Sparkles size={16} />
               <span>Tech & Life</span>
             </div>
-            
+
             <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">
               学习笔记
             </h1>
