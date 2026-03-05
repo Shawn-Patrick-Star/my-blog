@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { checkIsAdmin, getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { HeroSection } from "@/components/hero-section";
 import { BlogCard } from "@/components/blog-card";
 import { MomentCard } from "@/components/moment-card";
@@ -7,8 +7,9 @@ import { SearchInput } from "@/components/search-input";
 import { SectionHeader } from "@/components/section-header";
 import { QuoteCard } from "@/components/quote-card";
 import type { QuoteItem } from "@/components/quote-card";
-
-export const revalidate = 0;
+import { HomeSidebar } from "@/components/home-sidebar";
+import { VisitTracker } from "@/components/visit-tracker";
+import type { Post, Moment } from "@/lib/types";
 
 export default async function Home({
   searchParams,
@@ -23,21 +24,22 @@ export default async function Home({
 
   const supabase = await createClient();
 
-  // 获取首页配置
-  const { data: configs } = await supabase
-    .from("site_config")
-    .select("key, value");
+  // 获取首页配置和统计数据
+  const [{ data: configs }, { data: stats }] = await Promise.all([
+    supabase.from("site_config").select("key, value"),
+    supabase.from("site_stats").select("*").eq("id", 1).single()
+  ]);
 
-  const heroImage = configs?.find(c => c.key === "hero_image")?.value || "";
-  const heroImagesStr = configs?.find(c => c.key === "hero_images")?.value;
+  const heroImage = configs?.find((c: any) => c.key === "hero_image")?.value || "";
+  const heroImagesStr = configs?.find((c: any) => c.key === "hero_images")?.value;
   let heroImages: string[] = [];
   try {
     if (heroImagesStr) heroImages = JSON.parse(heroImagesStr);
   } catch (e) { }
 
-  const siteTitle = configs?.find(c => c.key === "site_title")?.value || "Shawn's BLOG";
+  const siteTitle = configs?.find((c: any) => c.key === "site_title")?.value || "Shawn's BLOG";
 
-  const siteQuotesStr = configs?.find(c => c.key === "site_quotes")?.value;
+  const siteQuotesStr = configs?.find((c: any) => c.key === "site_quotes")?.value;
   let siteQuotes: QuoteItem[] = [];
   try {
     if (siteQuotesStr) {
@@ -85,79 +87,103 @@ export default async function Home({
     if (data) allComments = data;
   }
 
+  const siteStats = stats || { page_views: 0, unique_visitors: 0 };
+
   return (
     <div className="py-8 px-4 md:px-8 animate-in fade-in duration-700">
-      <div className="max-w-4xl mx-auto space-y-16">
-        {/* Hero + 搜索 */}
-        <section>
-          <HeroSection
-            images={heroImages}
-            initialImage={heroImage}
-            title={siteTitle}
-            isAdmin={isAdmin}
-          />
-          <div className="max-w-md mx-auto -mt-16 relative z-10 px-4">
-            <SearchInput defaultValue={query} placeholder="发现花园里的精彩时刻..." />
-          </div>
-        </section>
+      <VisitTracker />
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-12 items-start">
 
-        {/* 句子卡片 */}
-        {!query && <QuoteCard quotes={siteQuotes} />}
+          {/* 左侧侧边栏 - 在大屏幕固定 */}
+          <aside className="hidden lg:block lg:sticky lg:top-20 lg:h-fit">
+            <HomeSidebar stats={siteStats} />
+          </aside>
 
-        {/* 最新笔记 */}
-        <section className="space-y-6">
-          <SectionHeader
-            title="最新笔记"
-            actionLabel="写新笔记"
-            actionHref="/admin/write"
-            showAction={isAdmin}
-          />
-          <div className="flex flex-col gap-4">
-            {posts?.map((post) => (
-              <BlogCard
-                key={post.id}
-                post={post}
+          {/* 右侧主内容区 */}
+          <div className="space-y-16">
+            {/* 移动端侧边栏展示 (显示在 Hero 下方) */}
+            <div className="lg:hidden">
+              {/* 可以在这里放一个简化版的 Sidebar */}
+            </div>
+
+            {/* Hero + 搜索 */}
+            <section>
+              <HeroSection
+                images={heroImages}
+                initialImage={heroImage}
+                title={siteTitle}
                 isAdmin={isAdmin}
               />
-            ))}
-            {posts?.length === 0 && (
-              <p className="text-muted-foreground text-center py-10 italic">未找到相关笔记</p>
-            )}
-          </div>
-        </section>
+              <div className="max-w-md mx-auto -mt-16 relative z-10 px-4">
+                <SearchInput defaultValue={query} placeholder="发现花园里的精彩时刻..." />
+              </div>
+            </section>
 
-        {/* 社区精选 */}
-        <section className="space-y-6">
-          <SectionHeader
-            title="社区精选"
-            actionLabel="去社区看看"
-            actionHref="/community"
-            showAction={true}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-            {moments?.map((item) => {
-              const momentComments = allComments.filter(c => c.moment_id === item.id);
-              return (
-                <MomentCard
-                  key={item.id}
-                  id={item.id}
-                  content={item.content}
-                  createdAt={item.created_at}
-                  images={item.images}
-                  likes={item.likes}
-                  comments={momentComments}
-                  isAdmin={isAdmin}
-                  author={item.author}
-                />
-              );
-            })}
-            {moments?.length === 0 && (
-              <p className="text-muted-foreground text-center col-span-2 py-10 italic">
-                还没有精选动态
-              </p>
-            )}
+            {/* 兼容移动端的 Sidebar (显示在 Hero 之后) */}
+            <div className="lg:hidden">
+              <HomeSidebar stats={siteStats} />
+            </div>
+
+            {/* 句子卡片 */}
+            {!query && <QuoteCard quotes={siteQuotes} />}
+
+            {/* 最新笔记 */}
+            <section className="space-y-6">
+              <SectionHeader
+                title="最新笔记"
+                actionLabel="写新笔记"
+                actionHref="/admin/write"
+                showAction={isAdmin}
+              />
+              <div className="flex flex-col gap-4">
+                {posts?.map((post: Post) => (
+                  <BlogCard
+                    key={post.id}
+                    post={post}
+                    isAdmin={isAdmin}
+                  />
+                ))}
+                {posts?.length === 0 && (
+                  <p className="text-muted-foreground text-center py-10 italic">未找到相关笔记</p>
+                )}
+              </div>
+            </section>
+
+            {/* 社区精选 */}
+            <section className="space-y-6">
+              <SectionHeader
+                title="社区精选"
+                actionLabel="去社区看看"
+                actionHref="/community"
+                showAction={true}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
+                {moments?.map((item: Moment) => {
+                  const momentComments = allComments.filter((c: any) => c.moment_id === item.id);
+                  return (
+                    <MomentCard
+                      key={item.id}
+                      id={item.id}
+                      content={item.content}
+                      createdAt={item.created_at}
+                      images={item.images}
+                      likes={item.likes}
+                      comments={momentComments}
+                      isAdmin={isAdmin}
+                      author={item.author}
+                    />
+                  );
+                })}
+                {moments?.length === 0 && (
+                  <p className="text-muted-foreground text-center col-span-2 py-10 italic">
+                    还没有精选动态
+                  </p>
+                )}
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

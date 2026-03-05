@@ -80,9 +80,9 @@ export default async function BlogListPage({
             </p>
           </div>
 
-          {/* 
+          {/*
              过滤器容器：玻璃拟态 (Glassmorphism) + 滚动吸顶 (Sticky)
-             当你往下滚动文章时，搜索栏会优雅地悬浮在顶部 
+             当你往下滚动文章时，搜索栏会优雅地悬浮在顶部
           */}
           <div className="sticky top-4 z-40 p-2 md:p-3 bg-background/70 backdrop-blur-xl border border-border/60 rounded-2xl shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition-all">
             <BlogFilters categories={categories} tags={tags} />
@@ -105,7 +105,7 @@ export default async function BlogListPage({
             )
           ) : (
             // 精致化的空状态 (Empty State)
-            <div className="flex flex-col items-center justify-center py-24 px-4 border-2 border-dashed border-border/60 rounded-[2rem] bg-card/30 animate-in zoom-in-95 duration-500">
+            <div className="flex flex-col items-center justify-center py-24 px-4 border-2 border-dashed border-border/60 rounded-4xl bg-card/30 animate-in zoom-in-95 duration-500">
               <div className="inline-flex p-5 bg-primary/5 rounded-full mb-5 relative group">
                 <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping opacity-50" />
                 <SearchX size={36} className="text-primary/60 relative z-10 group-hover:scale-110 transition-transform" />
