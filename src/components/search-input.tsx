@@ -6,19 +6,30 @@ import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce"; // 需要 npm install use-debounce 或者手写
 import { useEffect, useState } from "react";
 
-export function SearchInput({ defaultValue }: { defaultValue: string }) {
+import { usePathname } from "next/navigation";
+
+export function SearchInput({
+  defaultValue,
+  placeholder = "搜索笔记或动态..."
+}: {
+  defaultValue: string;
+  placeholder?: string;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
   const [text, setText] = useState(defaultValue);
   const [query] = useDebounce(text, 500); // 防抖 500ms
 
   useEffect(() => {
-    // 当 query 变化时，推送到 URL
+    // 只有在完成初次加载或者 text 真正改变时才触发
+    if (text === defaultValue) return;
+
     if (query) {
-      router.push(`/?q=${query}`);
+      router.push(`${pathname}?q=${query}`);
     } else {
-      router.push("/");
+      router.push(pathname);
     }
-  }, [query, router]);
+  }, [query, router, pathname, defaultValue]);
 
   return (
     <div className="relative shadow-lg rounded-full">
@@ -26,7 +37,7 @@ export function SearchInput({ defaultValue }: { defaultValue: string }) {
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="搜索笔记或动态..."
+        placeholder={placeholder}
         className="pl-12 h-12 rounded-full border-border bg-background/80 backdrop-blur focus-visible:ring-primary/20 text-base"
       />
     </div>

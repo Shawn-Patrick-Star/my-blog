@@ -2,25 +2,37 @@
 
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth";
 
 /** 点赞文章 */
 export async function likePost(postId: string): Promise<void> {
-    const { data, error: selectError } = await supabase
+    const userWithProfile = await getCurrentUser();
+
+    // 乐观增加点赞数
+    const { data: post, error: selectError } = await supabase
         .from("posts")
-        .select("likes")
+        .select("likes, author_id")
         .eq("id", postId)
         .single();
 
     if (selectError) throw new Error(selectError.message);
 
-    const currentLikes = data?.likes || 0;
-
     const { error: updateError } = await supabase
         .from("posts")
-        .update({ likes: currentLikes + 1 })
+        .update({ likes: (post.likes || 0) + 1 })
         .eq("id", postId);
 
     if (updateError) throw new Error(updateError.message);
+
+    // 触发通知 (如果点赞者不是作者自己)
+    if (userWithProfile && post.author_id && userWithProfile.id !== post.author_id) {
+        await supabase.from("notifications").insert([{
+            user_id: post.author_id,
+            type: 'like',
+            from_user_id: userWithProfile.id,
+            target_id: postId
+        }]);
+    }
 
     revalidatePath("/");
     revalidatePath("/blog");
@@ -29,22 +41,32 @@ export async function likePost(postId: string): Promise<void> {
 
 /** 点赞动态 */
 export async function likeMoment(momentId: string): Promise<void> {
-    const { data, error: selectError } = await supabase
+    const userWithProfile = await getCurrentUser();
+
+    const { data: moment, error: selectError } = await supabase
         .from("moments")
-        .select("likes")
+        .select("likes, author_id")
         .eq("id", momentId)
         .single();
 
     if (selectError) throw new Error(selectError.message);
 
-    const currentLikes = data?.likes || 0;
-
     const { error: updateError } = await supabase
         .from("moments")
-        .update({ likes: currentLikes + 1 })
+        .update({ likes: (moment.likes || 0) + 1 })
         .eq("id", momentId);
 
     if (updateError) throw new Error(updateError.message);
+
+    // 触发通知
+    if (userWithProfile && moment.author_id && userWithProfile.id !== moment.author_id) {
+        await supabase.from("notifications").insert([{
+            user_id: moment.author_id,
+            type: 'like',
+            from_user_id: userWithProfile.id,
+            target_id: momentId
+        }]);
+    }
 
     revalidatePath("/");
     revalidatePath("/admin/moments/[id]", "page");
@@ -53,20 +75,22 @@ export async function likeMoment(momentId: string): Promise<void> {
 /** 添加评论 */
 export async function createComment(formData: FormData): Promise<{ success: boolean; error?: string }> {
     try {
-        const authorName = formData.get("author_name") as string;
+        const userWithProfile = await getCurrentUser();
+        if (!userWithProfile) {
+            return { success: false, error: "请先登录后再发表评论" };
+        }
+
         const content = formData.get("content") as string;
         const postId = formData.get("post_id") as string | null;
         const momentId = formData.get("moment_id") as string | null;
 
-        if (!authorName.trim() || !content.trim()) {
-            return { success: false, error: "昵称和评论内容不能为空" };
-        }
-        if (!postId && !momentId) {
-            return { success: false, error: "缺少目标 ID" };
+        if (!content.trim()) {
+            return { success: false, error: "评论内容不能为空" };
         }
 
         const payload: any = {
-            author_name: authorName.trim(),
+            author_id: userWithProfile.id,
+            author_name: userWithProfile.profile.username,
             content: content.trim(),
         };
 
@@ -74,8 +98,26 @@ export async function createComment(formData: FormData): Promise<{ success: bool
         if (momentId) payload.moment_id = momentId;
 
         const { error } = await supabase.from("comments").insert([payload]);
-
         if (error) throw new Error(error.message);
+
+        // 触发通知给文章作者
+        let targetOwnerId: string | undefined;
+        if (postId) {
+            const { data } = await supabase.from("posts").select("author_id").eq("id", postId).single();
+            targetOwnerId = data?.author_id;
+        } else if (momentId) {
+            const { data } = await supabase.from("moments").select("author_id").eq("id", momentId).single();
+            targetOwnerId = data?.author_id;
+        }
+
+        if (targetOwnerId && targetOwnerId !== userWithProfile.id) {
+            await supabase.from("notifications").insert([{
+                user_id: targetOwnerId,
+                type: 'comment',
+                from_user_id: userWithProfile.id,
+                target_id: (postId || momentId) as string
+            }]);
+        }
 
         revalidatePath("/");
         revalidatePath("/blog");

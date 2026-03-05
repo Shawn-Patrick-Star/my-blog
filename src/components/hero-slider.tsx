@@ -44,14 +44,14 @@ export function HeroSlider({ images }: HeroSliderProps) {
                         src={displayImages[currentIndex]}
                         alt="Hero Background"
                         fill
-                        className="object-cover brightness-75 transition-transform duration-[10000ms] scale-100 group-hover:scale-110"
+                        className="object-cover brightness-75 transition-transform duration-10000 scale-100 group-hover:scale-110"
                         priority
                     />
                 </motion.div>
             </AnimatePresence>
 
             {/* 渐变遮罩 */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/20 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/20 pointer-events-none" />
         </div>
     );
 }

@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Github } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserNav } from "@/components/layout/user-nav";
 
 const navLinks = [
-    { href: "/", label: "动态" },
+    { href: "/", label: "首页" },
+    { href: "/community", label: "社区" },
     { href: "/blog", label: "笔记" },
-    { href: "/admin", label: "后台" },
     { href: "/about", label: "关于" },
 ];
 export function Navbar() {
@@ -58,16 +59,8 @@ export function Navbar() {
 
                 {/* 右侧图标 */}
                 <div className="flex items-center gap-1 sm:gap-2">
-                    <a
-                        href="https://github.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 text-foreground hover:text-primary transition-colors hidden sm:block"
-                        title="GitHub"
-                    >
-                        <Github size={20} />
-                    </a>
                     <ThemeToggle />
+                    <UserNav />
                 </div>
             </nav>
         </div>

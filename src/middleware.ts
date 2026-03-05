@@ -1,20 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // refreshing the auth token
+  await supabase.auth.getUser()
+
+  return supabaseResponse
+}
 
 export const config = {
-  matcher: ["/admin/:path*"], // 只拦截 /admin 开头的路径
-};
-
-export function middleware(req: NextRequest) {
-  // 1. 检查有没有名为 "admin_session" 的 Cookie
-  const cookie = req.cookies.get("admin_session");
-  const isAuth = cookie?.value === "true";
-
-  // 2. 如果没有 Cookie，强制重定向到登录页
-  if (!isAuth) {
-    // 这里的 url 是为了让登录后能跳回来（可选功能，这里先简化处理）
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // 3. 有 Cookie，放行
-  return NextResponse.next();
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

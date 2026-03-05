@@ -86,7 +86,7 @@ export default function AdminMoments() {
       formData.append("image_urls", imageUrls.join(","));
 
       await createMoment(formData);
-      router.push("/");
+      router.push("/community");
       router.refresh();
     } catch (error: any) {
       alert("发布失败: " + error.message);

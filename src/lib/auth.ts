@@ -1,12 +1,36 @@
-import { cookies } from "next/headers";
-
-const COOKIE_NAME = "admin_session";
+import { createClient } from "@/utils/supabase/server";
 
 /**
- * 检查当前请求是否为已登录的管理员
- * 用于 Server Component 中的权限判断
+ * 获取当前登录用户及个人资料
+ */
+export async function getCurrentUser() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+    return { ...user, profile };
+}
+
+/**
+ * 检查当前请求是否为管理员权限 (admin 或 super_admin)
  */
 export async function checkIsAdmin(): Promise<boolean> {
-    const cookieStore = await cookies();
-    return cookieStore.get(COOKIE_NAME)?.value === "true";
+    const userWithProfile = await getCurrentUser();
+    if (!userWithProfile?.profile) return false;
+    const role = userWithProfile.profile.role;
+    return role === "admin" || role === "super_admin";
+}
+
+/**
+ * 检查是否为最高管理员
+ */
+export async function checkIsSuperAdmin(): Promise<boolean> {
+    const userWithProfile = await getCurrentUser();
+    return userWithProfile?.profile?.role === "super_admin";
 }

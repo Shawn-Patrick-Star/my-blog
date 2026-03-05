@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { Hash, FileText, Trash2, Edit } from "lucide-react";
+import { Hash, FileText, Trash2, Edit, User as UserIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { deletePost } from "@/lib/actions/post";
 import type { Post } from "@/lib/types";
@@ -34,26 +34,30 @@ export function BlogCard({ post, isAdmin }: BlogCardProps) {
             {/* 左侧文字内容区 */}
             <div className="flex-1 p-8 flex flex-col justify-between order-2 md:order-1">
               <div>
-                <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground/80 mb-4 font-bold tracking-widest uppercase">
-                  <time>
-                    {format(new Date(post.created_at), "yyyy-MM-dd")}
-                  </time>
-                  {post.category && (
-                    <>
-                      <span className="opacity-30">|</span>
-                      <span className="text-primary font-black">
-                        {post.category}
-                      </span>
-                    </>
-                  )}
-                  {post.word_count > 0 && (
-                    <>
-                      <span className="opacity-30">|</span>
-                      <span className="flex items-center gap-1">
-                        <FileText size={10} /> {post.word_count}
-                      </span>
-                    </>
-                  )}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground/80 font-bold tracking-widest uppercase">
+                    <time>
+                      {format(new Date(post.created_at), "yyyy-MM-dd")}
+                    </time>
+                    {post.category && (
+                      <>
+                        <span className="opacity-30">|</span>
+                        <span className="text-primary font-black">
+                          {post.category}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-foreground/70">{post.author?.username || "未知作者"}</span>
+                    <div className="h-5 w-5 rounded-full bg-accent border border-border flex items-center justify-center overflow-hidden">
+                      {post.author?.avatar_url ? (
+                        <img src={post.author.avatar_url} alt="author" className="w-full h-full object-cover" />
+                      ) : (
+                        <UserIcon size={10} className="text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <h3 className="text-2xl font-black text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight">

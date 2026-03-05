@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase";
-import { checkIsAdmin } from "@/lib/auth";
+import { createClient } from "@/utils/supabase/server";
+import { checkIsAdmin, getCurrentUser } from "@/lib/auth";
 import { HeroSection } from "@/components/hero-section";
 import { BlogCard } from "@/components/blog-card";
 import { MomentCard } from "@/components/moment-card";
@@ -17,8 +17,11 @@ export default async function Home({
 }) {
   const { q } = await searchParams;
   const query = q || "";
+  const userWithProfile = await getCurrentUser();
+  const isAdmin = userWithProfile?.profile.role === "admin" || userWithProfile?.profile.role === "super_admin";
+  const isUser = !!userWithProfile;
 
-  const isAdmin = await checkIsAdmin();
+  const supabase = await createClient();
 
   // 获取首页配置
   const { data: configs } = await supabase
@@ -49,12 +52,15 @@ export default async function Home({
   // 构建查询 (支持搜索)
   let postQuery = supabase
     .from("posts")
-    .select("*")
+    .select("*, author:profiles(*)")
     .eq("is_published", true)
     .order("created_at", { ascending: false });
+
+  // 首页动态仅显示高赞或最新的前 4 个
   let momentQuery = supabase
     .from("moments")
-    .select("*")
+    .select("*, author:profiles(*)")
+    .order("likes", { ascending: false })
     .order("created_at", { ascending: false });
 
   if (query) {
@@ -64,7 +70,7 @@ export default async function Home({
 
   const [{ data: posts }, { data: moments }] = await Promise.all([
     postQuery.limit(5),
-    momentQuery.limit(10),
+    momentQuery.limit(4),
   ]);
 
   // 获取所有的 comments 用于 moments
@@ -80,8 +86,8 @@ export default async function Home({
   }
 
   return (
-    <div className="py-8 px-4 md:px-8">
-      <div className="max-w-4xl mx-auto space-y-12">
+    <div className="py-8 px-4 md:px-8 animate-in fade-in duration-700">
+      <div className="max-w-4xl mx-auto space-y-16">
         {/* Hero + 搜索 */}
         <section>
           <HeroSection
@@ -91,7 +97,7 @@ export default async function Home({
             isAdmin={isAdmin}
           />
           <div className="max-w-md mx-auto -mt-16 relative z-10 px-4">
-            <SearchInput defaultValue={query} />
+            <SearchInput defaultValue={query} placeholder="发现花园里的精彩时刻..." />
           </div>
         </section>
 
@@ -99,7 +105,7 @@ export default async function Home({
         {!query && <QuoteCard quotes={siteQuotes} />}
 
         {/* 最新笔记 */}
-        <section>
+        <section className="space-y-6">
           <SectionHeader
             title="最新笔记"
             actionLabel="写新笔记"
@@ -115,20 +121,20 @@ export default async function Home({
               />
             ))}
             {posts?.length === 0 && (
-              <p className="text-muted-foreground text-center py-10">未找到相关笔记</p>
+              <p className="text-muted-foreground text-center py-10 italic">未找到相关笔记</p>
             )}
           </div>
         </section>
 
-        {/* 碎片动态 */}
-        <section>
+        {/* 社区精选 */}
+        <section className="space-y-6">
           <SectionHeader
-            title="碎片动态"
-            actionLabel="发新动态"
-            actionHref="/admin/moments"
-            showAction={isAdmin}
+            title="社区精选"
+            actionLabel="去社区看看"
+            actionHref="/community"
+            showAction={true}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
             {moments?.map((item) => {
               const momentComments = allComments.filter(c => c.moment_id === item.id);
               return (
@@ -145,8 +151,8 @@ export default async function Home({
               );
             })}
             {moments?.length === 0 && (
-              <p className="text-muted-foreground text-center col-span-2 py-10">
-                未找到相关动态
+              <p className="text-muted-foreground text-center col-span-2 py-10 italic">
+                还没有精选动态
               </p>
             )}
           </div>

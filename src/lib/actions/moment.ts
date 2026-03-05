@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth";
 
 /** 创建动态 */
 export async function createMoment(formData: FormData): Promise<void> {
@@ -11,12 +12,16 @@ export async function createMoment(formData: FormData): Promise<void> {
 
     if (!content && imageUrls.length === 0) return;
 
+    const userWithProfile = await getCurrentUser();
+    if (!userWithProfile) throw new Error("未登录");
+
     const { error } = await supabase
         .from("moments")
-        .insert([{ content, images: imageUrls }]);
+        .insert([{ content, images: imageUrls, author_id: userWithProfile.id }]);
 
     if (error) throw new Error("发布失败：" + error.message);
     revalidatePath("/");
+    revalidatePath("/community");
 }
 
 /** 更新动态 */

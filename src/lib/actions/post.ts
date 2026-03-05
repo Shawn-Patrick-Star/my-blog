@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 import { uploadImage } from "@/lib/upload";
 import type { ActionResult } from "@/lib/types";
+import { getCurrentUser } from "@/lib/auth";
 
 /** 创建文章 */
 export async function createPost(formData: FormData): Promise<ActionResult> {
@@ -27,6 +28,9 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
     const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [];
     const wordCount = content.length;
 
+    const userWithProfile = await getCurrentUser();
+    if (!userWithProfile) throw new Error("未登录");
+
     const { error } = await supabase.from("posts").insert([
         {
             title,
@@ -38,6 +42,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
             word_count: wordCount,
             cover_image: coverImageUrl,
             is_published: true,
+            author_id: userWithProfile.id,
         },
     ]);
 
