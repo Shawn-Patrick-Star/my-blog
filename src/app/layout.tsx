@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 // Inter 字体配置（用于正文）
 const inter = Inter({
@@ -21,6 +22,9 @@ const fredoka = Fredoka({
 export const metadata: Metadata = {
   title: "我的个人空间",
   description: "记录学习与生活",
+  icons: {
+    icon: '/gardening.ico',
+  },
 };
 
 export default function RootLayout({
@@ -40,6 +44,7 @@ export default function RootLayout({
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
         </ThemeProvider>
       </body>
     </html>

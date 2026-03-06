@@ -3,9 +3,14 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { checkIsAdmin } from "@/lib/auth";
 
 /** 追踪访问量 */
 export async function trackVisitAction() {
+    // 如果是管理员，不计入统计
+    const isAdmin = await checkIsAdmin();
+    if (isAdmin) return;
+
     const supabase = await createClient();
     const cookieStore = await cookies();
 

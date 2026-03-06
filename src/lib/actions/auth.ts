@@ -64,7 +64,7 @@ export async function registerAction(
         return { error: "注册失败: " + error.message };
     }
 
-    return redirect("/login?msg=REGISTER_SUCCESS");
+    return { success: true };
 }
 
 /** 退出登录 */
