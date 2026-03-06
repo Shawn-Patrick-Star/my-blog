@@ -20,8 +20,21 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "我的个人空间",
-  description: "记录学习与生活",
+  title: {
+    default: "Shawn's Garden | 个人技术博客",
+    template: "%s | Shawn's Garden"
+  },
+  description: "记录技术点滴、生活瞬间与深度思考的个人空间。",
+  keywords: ["博客", "技术", "前端", "Next.js", "Supabase"],
+  authors: [{ name: "Shawn" }],
+  openGraph: {
+    title: "Shawn's Garden",
+    description: "记录技术点滴、生活瞬间与深度思考的个人空间。",
+    url: 'https://shawn-garden.vercel.app',
+    siteName: "Shawn's Garden",
+    locale: 'zh_CN',
+    type: 'website',
+  },
   icons: {
     icon: '/gardening.ico',
   },
