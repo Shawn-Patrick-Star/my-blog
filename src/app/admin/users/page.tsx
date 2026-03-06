@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { checkIsSuperAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { User, Shield, ShieldCheck, ArrowLeft, MoreHorizontal, UserCog } from "lucide-react";
@@ -12,6 +12,7 @@ export default async function AdminUsersPage() {
         redirect("/admin");
     }
 
+    const supabase = await createClient();
     const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
