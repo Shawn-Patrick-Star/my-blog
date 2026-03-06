@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { getCurrentUser } from "@/lib/auth";
 
 // Inter 字体配置（用于正文）
 const inter = Inter({
@@ -40,11 +41,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const userWithProfile = await getCurrentUser();
   return (
     <html lang="zh" suppressHydrationWarning>
       <body className={`${inter.variable} ${fredoka.variable} font-sans antialiased`}>
@@ -54,7 +56,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
+          <Navbar initialUser={userWithProfile} />
           <main className="min-h-screen">{children}</main>
           <Footer />
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />

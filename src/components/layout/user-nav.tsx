@@ -1,19 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
-import { User, LogOut, Settings, LayoutDashboard, Bell } from "lucide-react";
+import { User, LogOut, Settings, LayoutDashboard, Bell, Loader2 } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
 
-export function UserNav() {
+export function UserNav({ initialUser }: { initialUser: any }) {
     const supabase = createClient();
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<any>(null);
+    const [isPending, startTransition] = useTransition();
+    const [user, setUser] = useState<any>(initialUser || null);
+    const [profile, setProfile] = useState<any>(initialUser?.profile || null);
 
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
+        // 如果已经有初始数据，先同步一下（防止 SSG/SSR 导致的状态不一致）
+        if (initialUser) {
+            setUser(initialUser);
+            setProfile(initialUser.profile);
+            fetchUnreadCount(initialUser.id);
+        }
+
+        // 立即检查一次 Session，防止 onAuthStateChange 响应过慢
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setUser(session.user);
+                fetchProfile(session.user.id);
+                fetchUnreadCount(session.user.id);
+            }
+        };
+        checkSession();
+
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (session) {
@@ -97,15 +116,20 @@ export function UserNav() {
                 </div>
             </Link>
 
-            <form action={logoutAction} className="flex items-center">
-                <button
-                    type="submit"
-                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
-                    title="退出登录"
-                >
-                    <LogOut size={16} />
-                </button>
-            </form>
+            <button
+                type="button"
+                onClick={() => {
+                    startTransition(async () => {
+                        await logoutAction();
+                        window.location.href = "/login";
+                    });
+                }}
+                disabled={isPending}
+                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                title="退出登录"
+            >
+                {isPending ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
+            </button>
         </div>
     );
 }

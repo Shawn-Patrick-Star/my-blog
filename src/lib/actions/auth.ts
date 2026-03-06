@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 /** 登录 */
 export async function loginAction(
@@ -21,7 +22,8 @@ export async function loginAction(
         return { error: "登录失败: " + error.message };
     }
 
-    redirect("/");
+    revalidatePath("/", "layout");
+    return { success: true };
 }
 
 /** 注册 */
@@ -71,5 +73,6 @@ export async function registerAction(
 export async function logoutAction(): Promise<void> {
     const supabase = await createClient();
     await supabase.auth.signOut();
+    revalidatePath("/", "layout");
     redirect("/login");
 }

@@ -13,7 +13,7 @@ const navLinks = [
     { href: "/blog", label: "笔记" },
     { href: "/about", label: "关于" },
 ];
-export function Navbar() {
+export function Navbar({ initialUser }: { initialUser: any }) {
     const pathname = usePathname();
 
     return (
@@ -60,7 +60,7 @@ export function Navbar() {
                 {/* 右侧图标 */}
                 <div className="flex items-center gap-1 sm:gap-2">
                     <ThemeToggle />
-                    <UserNav />
+                    <UserNav initialUser={initialUser} />
                 </div>
             </nav>
         </div>

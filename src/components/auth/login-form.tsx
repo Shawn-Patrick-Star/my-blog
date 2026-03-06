@@ -4,17 +4,25 @@ import { loginAction } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { useActionState } from "react";
-import { LogIn } from "lucide-react";
+import { useActionState, useEffect } from "react";
+import { LogIn, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-const initialState = { error: "" };
+const initialState = { error: "", success: false };
 
 export function LoginForm() {
     const [state, formAction, isPending] = useActionState(loginAction, initialState);
     const searchParams = useSearchParams();
     const msg = searchParams.get("msg");
+
+    // 关键修正：登录成功后使用 window.location 强制刷新页面
+    // 这样可以确保 Navbar 等服务端组件能立刻拿到最新的 Cookie
+    useEffect(() => {
+        if (state?.success) {
+            window.location.href = "/";
+        }
+    }, [state?.success]);
 
     return (
         <Card className="w-full max-w-sm border-paper-border shadow-lg bg-paper-bg/80 backdrop-blur-sm">
