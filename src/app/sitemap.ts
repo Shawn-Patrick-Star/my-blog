@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next'
 import { createClient } from "@/utils/supabase/server"
 
+export const dynamic = 'force-dynamic' 
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://shawn-garden.vercel.app' // 部署后请替换为你的真实域名
     const supabase = await createClient()

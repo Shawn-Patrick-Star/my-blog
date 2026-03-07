@@ -58,13 +58,12 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - static assets (svg, png, jpg, etc.)
-     * - api routes that don't need auth
+     * 匹配所有路径，除了：
+     * - _next/static (静态文件)
+     * - _next/image (图片优化)
+     * - favicon.ico, sitemap.xml, robots.txt (SEO 相关文件)
+     * - 所有图片后缀 (svg, png, jpg, jpeg, gif, webp)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }
