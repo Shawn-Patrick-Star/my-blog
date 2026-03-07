@@ -58,7 +58,7 @@ export default async function UserProfilePage({
                         <div className="flex items-center justify-center md:justify-start gap-3">
                             <h1 className="text-4xl font-black text-foreground tracking-tight">{profile.username}</h1>
                             {profile.role === "super_admin" && (
-                                <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">博主</span>
+                                <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">园长</span>
                             )}
                         </div>
                         <p className="text-muted-foreground font-medium opacity-80">{profile.email}</p>

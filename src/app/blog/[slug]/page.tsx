@@ -73,114 +73,123 @@ export default async function BlogPost({
           </div>
         )}
 
-        {/* 两列布局：左侧目录卡片 + 右侧内容卡片 */}
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
-          {/* 左侧目录卡片 - 只在桌面显示 */}
-          <div className="hidden lg:block sticky top-24 self-start">
-            <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6">
-              {/* 返回链接 */}
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-6 group font-medium w-full"
-              >
-                <ArrowLeft
-                  size={16}
-                  className="group-hover:-translate-x-0.5 transition-transform"
-                />
-                返回笔记
-              </Link>
+        {/* 页面主体包裹层，分成分块加载以控制 Sticky 范围 */}
+        <div className="flex flex-col gap-8">
+          {/* 第一部分：左侧目录卡片 + 右侧正文区域 */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+            {/* 左侧目录卡片 - 只在桌面显示，吸顶 */}
+            <div className="hidden lg:block sticky top-24 self-start">
+              <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6">
+                {/* 返回链接 */}
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-6 group font-medium w-full"
+                >
+                  <ArrowLeft
+                    size={16}
+                    className="group-hover:-translate-x-0.5 transition-transform"
+                  />
+                  返回笔记
+                </Link>
 
-              {/* 目录组件 */}
-              <TableOfContents />
-            </div>
-          </div>
-
-          {/* 右侧内容区域 */}
-          <div className="min-w-0 w-full space-y-8">
-            {/* 移动端返回链接 */}
-            <div className="lg:hidden">
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group font-medium"
-              >
-                <ArrowLeft
-                  size={16}
-                  className="group-hover:-translate-x-0.5 transition-transform"
-                />
-                返回笔记
-              </Link>
+                {/* 目录组件 */}
+                <TableOfContents />
+              </div>
             </div>
 
-            {/* 文章卡片（不含评论） */}
-            <article className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all">
-              {/* 卡片顶部元数据信息 */}
-              <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
-                {/* 使用 grid 布局精确控制 */}
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
-                  {/* 左侧文字区域 */}
-                  <div className="space-y-4">
-                    {/* 第一行：日期和字数 - 使用 flex 确保在一行 */}
-                    <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
-                      <time dateTime={post.created_at}>
-                        发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
-                      </time>
-                      {post.word_count > 0 && (
-                        <>
-                          <span className="opacity-50">•</span>
-                          <span className="flex items-center gap-1.5">
-                            <FileText size={14} /> {post.word_count} 字
-                          </span>
-                        </>
+            {/* 右侧正文区域 */}
+            <div className="min-w-0 w-full space-y-8">
+              {/* 移动端返回链接 */}
+              <div className="lg:hidden">
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors group font-medium"
+                >
+                  <ArrowLeft
+                    size={16}
+                    className="group-hover:-translate-x-0.5 transition-transform"
+                  />
+                  返回笔记
+                </Link>
+              </div>
+
+              {/* 文章卡片（不含评论） */}
+              <article className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border transition-all">
+                {/* 卡片顶部元数据信息 */}
+                <header className="p-6 md:p-10 lg:p-12 pb-6 md:pb-8 border-b border-border/60">
+                  {/* 使用 grid 布局精确控制 */}
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start">
+                    {/* 左侧文字区域 */}
+                    <div className="space-y-4">
+                      {/* 第一行：日期和字数 - 使用 flex 确保在一行 */}
+                      <div className="flex items-center flex-wrap gap-4 text-muted-foreground text-sm font-medium">
+                        <time dateTime={post.created_at}>
+                          发布于 {format(new Date(post.created_at), "yyyy-MM-dd")}
+                        </time>
+                        {post.word_count > 0 && (
+                          <>
+                            <span className="opacity-50">•</span>
+                            <span className="flex items-center gap-1.5">
+                              <FileText size={14} /> {post.word_count} 字
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* 第二行：标签 */}
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {post.tags.map((tag: string) => (
+                            <span key={tag} className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase">
+                              <Hash size={12} className="inline mr-1 opacity-50" />
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
 
-                    {/* 第二行：标签 */}
-                    {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {post.tags.map((tag: string) => (
-                          <span key={tag} className="px-2.5 py-1 bg-accent text-accent-foreground text-xs rounded-md border border-border font-medium tracking-wide uppercase">
-                            <Hash size={12} className="inline mr-1 opacity-50" />
-                            {tag}
-                          </span>
-                        ))}
+                    {/* 右侧图标 - 固定在右上角，与第一行对齐 */}
+                    {isAdmin && (
+                      <div className="flex items-center gap-1 md:mt-0 md:self-start">
+                        <PostAdminActions postId={post.id} />
                       </div>
                     )}
                   </div>
+                </header>
 
-                  {/* 右侧图标 - 固定在右上角，与第一行对齐 */}
-                  {isAdmin && (
-                    <div className="flex items-center gap-1 md:mt-0 md:self-start">
-                      <PostAdminActions postId={post.id} />
-                    </div>
-                  )}
+                {/* Markdown 正文 */}
+                <div className="p-6 md:p-10 lg:p-12">
+                  <MarkdownRenderer content={post.content} />
                 </div>
-              </header>
 
-              {/* Markdown 正文 */}
-              <div className="p-6 md:p-10 lg:p-12">
-                <MarkdownRenderer content={post.content} />
+              </article>
+            </div>
+          </div>
+
+          {/* 第二部分：评论区 (独立布局，脱离目录所在的容器，使目录只跟正文对齐) */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+            <div className="hidden lg:block"></div> {/* 左侧留白以保持右侧对齐 */}
+            <div className="min-w-0 w-full">
+              {/* 评论区独立卡片 */}
+              <div id="comments" className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 md:p-8">
+                <CommentSection
+                  targetId={post.id}
+                  targetType="post"
+                  initialComments={comments || []}
+                  isAdmin={isAdmin}
+                  actionButtons={(
+                    <>
+                      <LikeButton
+                        targetId={post.id}
+                        targetType="post"
+                        initialLikes={post.likes || 0}
+                      />
+                      <ShareButton title={post.title} />
+                    </>
+                  )}
+                />
               </div>
-
-            </article>
-
-            {/* 评论区独立卡片 */}
-            <div id="comments" className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 md:p-8">
-              <CommentSection
-                targetId={post.id}
-                targetType="post"
-                initialComments={comments || []}
-                isAdmin={isAdmin}
-                actionButtons={(
-                  <>
-                    <LikeButton
-                      targetId={post.id}
-                      targetType="post"
-                      initialLikes={post.likes || 0}
-                    />
-                    <ShareButton title={post.title} />
-                  </>
-                )}
-              />
             </div>
           </div>
         </div>

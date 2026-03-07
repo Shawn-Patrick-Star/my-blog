@@ -96,7 +96,7 @@ export function HomeSidebar({ stats }: HomeSidebarProps) {
             <Card className={`border-border rounded-[2.5rem] overflow-hidden bg-linear-to-br ${status.color} backdrop-blur-md shadow-xl transition-all duration-500`}>
                 <CardContent className="p-0">
                     {/* 正方形插图区 */}
-                    <div className="h-48 w-full relative group overflow-hidden bg-muted/20">
+                    <div className="w-6/7 mx-auto aspect-square relative group overflow-hidden bg-muted/20 rounded-2xl">
                         <div className="absolute inset-0 flex items-center justify-center">
                             <img
                                 src={status.img}
@@ -116,13 +116,12 @@ export function HomeSidebar({ stats }: HomeSidebarProps) {
                                 {status.icon}
                             </div>
                         </div>
-                        {/* 浮动的状态标签 */}
-                        <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-border/50 translate-y-0 group-hover:-translate-y-1 transition-transform">
-                            {status.icon}
-                            <span className="text-xs font-black text-foreground">{status.text}</span>
-                        </div>
                     </div>
-
+                    {/* 浮动的状态标签 */}
+                    <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-border/50 translate-y-0 group-hover:-translate-y-1 transition-transform">
+                        {status.icon}
+                        <span className="text-xs font-black text-foreground">{status.text}</span>
+                    </div>
                     <div className="p-4 space-y-4">
                         {/* 实时时间 */}
                         <div className="flex flex-col items-center justify-center space-y-0.5 py-3 bg-background/40 rounded-4xl border border-border/20 shadow-inner">

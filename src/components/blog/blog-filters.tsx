@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ListFilter, Tag, Clock, Plus } from "lucide-react";
+import { Search, ListFilter, Tag, Clock, Plus, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,9 +11,10 @@ interface BlogFiltersProps {
     categories: string[];
     tags: string[];
     isAdmin?: boolean;
+    currentUserId?: string;
 }
 
-export function BlogFilters({ categories, tags, isAdmin }: BlogFiltersProps) {
+export function BlogFilters({ categories, tags, isAdmin, currentUserId }: BlogFiltersProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -21,6 +22,7 @@ export function BlogFilters({ categories, tags, isAdmin }: BlogFiltersProps) {
     const currentQuery = searchParams.get("q") || "";
     const currentCat = searchParams.get("cat") || "";
     const currentTag = searchParams.get("tag") || "";
+    const currentAuthor = searchParams.get("author") || "";
 
     const updateParams = (updates: Record<string, string | null>) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -106,6 +108,29 @@ export function BlogFilters({ categories, tags, isAdmin }: BlogFiltersProps) {
                 </div>
             </div>
 
+            {/* 1.5 快捷切换：只看我的 (仅在登录后显示) */}
+            {currentUserId && (
+                <div className="flex items-center gap-2 px-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateParams({ author: currentAuthor === currentUserId ? null : currentUserId })}
+                        className={cn(
+                            "h-8 rounded-full px-4 flex items-center gap-1.5 transition-all text-xs font-bold ring-1",
+                            currentAuthor === currentUserId
+                                ? "bg-primary/10 text-primary ring-primary/30 shadow-sm"
+                                : "text-muted-foreground hover:text-primary hover:bg-primary/5 ring-border/50"
+                        )}
+                    >
+                        <UserIcon size={14} fill={currentAuthor === currentUserId ? "currentColor" : "none"} />
+                        只看我的
+                        {currentAuthor === currentUserId && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary ml-0.5 animate-pulse" />
+                        )}
+                    </Button>
+                </div>
+            )}
+
             {/* 2. 展开的子过滤器：分类 (平滑下拉动画 + 柔和容器包裹) */}
             {currentView === "category" && (
                 <div className="flex flex-wrap items-center gap-2.5 p-3 md:px-4 bg-secondary/20 rounded-2xl border border-border/40 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
@@ -121,6 +146,19 @@ export function BlogFilters({ categories, tags, isAdmin }: BlogFiltersProps) {
                     >
                         全部
                     </Button>
+                    {isAdmin && currentUserId && (
+                        <Button
+                            variant={currentAuthor === currentUserId ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => updateParams({ cat: null, author: currentAuthor === currentUserId ? null : currentUserId })}
+                            className={cn(
+                                "rounded-full px-5 h-8 transition-all duration-300",
+                                currentAuthor === currentUserId ? "shadow-md shadow-primary/20" : "bg-background border-border/50 hover:bg-secondary"
+                            )}
+                        >
+                            我的发布
+                        </Button>
+                    )}
                     {categories.map((cat) => (
                         <Button
                             key={cat}

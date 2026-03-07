@@ -7,13 +7,16 @@ import { useDebounce } from "use-debounce"; // 需要 npm install use-debounce �
 import { useEffect, useState } from "react";
 
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function SearchInput({
   defaultValue,
-  placeholder = "搜索笔记或动态..."
+  placeholder = "搜索笔记或动态...",
+  className
 }: {
   defaultValue: string;
   placeholder?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -32,13 +35,13 @@ export function SearchInput({
   }, [query, router, pathname, defaultValue]);
 
   return (
-    <div className="relative shadow-lg rounded-full">
-      <Search className="absolute left-4 top-3 text-muted-foreground w-5 h-5" />
+    <div className={cn("relative shadow-lg rounded-full", className)}>
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={placeholder}
-        className="pl-12 h-12 rounded-full border-border bg-background/80 backdrop-blur focus-visible:ring-primary/20 text-base"
+        className="pl-10 h-full rounded-full border-border bg-background/80 backdrop-blur focus-visible:ring-primary/20 text-sm"
       />
     </div>
   );

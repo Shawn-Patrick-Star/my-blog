@@ -18,6 +18,7 @@ export default async function BlogListPage({
     q?: string;
     cat?: string;
     tag?: string;
+    author?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -25,6 +26,7 @@ export default async function BlogListPage({
   const query = params.q || "";
   const cat = params.cat || "";
   const tag = params.tag || "";
+  const authorId = params.author || "";
 
   const supabase = await createClient();
 
@@ -49,6 +51,9 @@ export default async function BlogListPage({
   if (tag) {
     supabaseQuery = supabaseQuery.contains("tags", [tag]);
   }
+  if (authorId) {
+    supabaseQuery = supabaseQuery.eq("author_id", authorId);
+  }
 
   const { data: posts, error } = await supabaseQuery;
 
@@ -57,6 +62,7 @@ export default async function BlogListPage({
   }
 
   const isAdmin = await checkIsAdmin();
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="relative min-h-screen py-12 px-4 md:px-8 overflow-hidden selection:bg-primary/20">
@@ -87,7 +93,12 @@ export default async function BlogListPage({
           */}
           <div className="sticky top-4 z-40 p-2 md:p-3 bg-background/70 backdrop-blur-xl border border-border/60 rounded-2xl shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition-all">
             <Suspense fallback={<div className="h-12 w-full animate-pulse bg-muted rounded-2xl" />}>
-              <BlogFilters categories={categories} tags={tags} isAdmin={isAdmin} />
+              <BlogFilters
+                categories={categories}
+                tags={tags}
+                isAdmin={isAdmin}
+                currentUserId={user?.id}
+              />
             </Suspense>
           </div>
         </header>

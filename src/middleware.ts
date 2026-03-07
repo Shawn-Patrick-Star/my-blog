@@ -2,54 +2,42 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  const url = request.nextUrl;
 
+  // 1. 【新增逻辑】专门保护 /admin 路径
+  if (url.pathname.startsWith('/admin')) {
+    const cookie = request.cookies.get("admin_session");
+    const isAuth = cookie?.value === "true";
+
+    if (!isAuth) {
+      // 如果没有管理员 Cookie，直接踢到登录页
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
+  // 2. 原有的 Supabase Session 刷新逻辑 (保持不变)
+  let supabaseResponse = NextResponse.next({ request })
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
+          supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
         },
       },
-      global: {
-        fetch: (...args: Parameters<typeof fetch>) => {
-          // 给 Supabase 的 fetch 请求加上 10 秒超时，防止无限挂起
-          const [input, init] = args;
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-          return fetch(input, {
-            ...init,
-            signal: controller.signal,
-          }).finally(() => clearTimeout(timeoutId));
-        },
-      },
     }
   )
 
-  // refreshing the auth token
   try {
     await supabase.auth.getUser()
-  } catch (e: any) {
-    // 网络失败（ECONNRESET / abort / TLS 握手超时）时静默处理
-    // 不打印完整堆栈，只记录简短信息，避免刷屏
-    const msg = e?.cause?.code || e?.message || 'unknown';
-    if (msg !== 'ABORT_ERR') {
-      console.warn(`[middleware] auth refresh skipped: ${msg}`);
-    }
+  } catch (e) {
+    // 静默处理错误
   }
 
   return supabaseResponse
@@ -57,13 +45,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * 匹配所有路径，除了：
-     * - _next/static (静态文件)
-     * - _next/image (图片优化)
-     * - favicon.ico, sitemap.xml, robots.txt (SEO 相关文件)
-     * - 所有图片后缀 (svg, png, jpg, jpeg, gif, webp)
-     */
+    /* 排除所有静态资源和 SEO 文件，确保 sitemap.xml 能够直接被访问 */
     '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }

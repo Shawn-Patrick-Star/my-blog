@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 interface MomentCardProps {
   id?: string;
   content: string;
-  createdAt: string;
+  created_at: string;
   images?: string[];
   likes?: number;
   comments?: Comment[];
@@ -25,7 +25,7 @@ interface MomentCardProps {
 export function MomentCard({
   id,
   content,
-  createdAt,
+  created_at,
   images,
   likes = 0,
   comments = [],
@@ -74,27 +74,27 @@ export function MomentCard({
   return (
     <Card className="w-full border-border shadow-sm hover:shadow-md transition-shadow bg-card group relative rounded-3xl overflow-hidden">
       <CardHeader className="flex flex-row items-center gap-3 p-4 pb-2">
-        <div className="h-10 w-10 rounded-full bg-accent border border-border flex items-center justify-center overflow-hidden">
+        <Link href={`/profile/${author?.id}`} className="h-10 w-10 rounded-full bg-accent border border-border flex items-center justify-center overflow-hidden shrink-0 hover:ring-2 hover:ring-primary/20 transition-all">
           {author?.avatar_url ? (
             <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
           ) : (
             <UserIcon size={18} className="text-muted-foreground" />
           )}
-        </div>
+        </Link>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold text-foreground">
+            <Link href={`/profile/${author?.id}`} className="text-sm font-bold text-foreground hover:text-primary transition-colors">
               {author?.username || "未知用户"}
-            </span>
+            </Link>
             {author?.role === "super_admin" && (
-              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">博主</span>
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">园长</span>
             )}
             {author?.role === "admin" && (
               <span className="text-[10px] bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded-full font-bold">管理</span>
             )}
           </div>
           <span className="text-[10px] text-muted-foreground opacity-70">
-            {format(new Date(createdAt), "yyyy-MM-dd HH:mm")}
+            {created_at ? format(new Date(created_at), "yyyy-MM-dd HH:mm") : "未知时间"}
           </span>
         </div>
       </CardHeader>

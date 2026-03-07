@@ -10,3 +10,6 @@
 管理安全：基于 Cookie 的自定义登录页 + Middleware 拦截。
 
 搜索功能：首页实时关键词过滤。
+
+netstat -ano | findstr :3000
+taskkill /F /PID 10068

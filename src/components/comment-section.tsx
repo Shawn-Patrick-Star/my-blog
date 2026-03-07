@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { MessageCircle, Trash2, User, Loader2 } from "lucide-react";
 import type { Comment } from "@/lib/types";
+import Link from "next/link";
 
 interface CommentSectionProps {
     targetId: string;
@@ -157,9 +158,12 @@ export function CommentSection({
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-semibold text-foreground text-sm">
+                                        <Link
+                                            href={`/profile/${comment.author_id}`}
+                                            className="font-semibold text-foreground text-sm hover:text-primary transition-colors"
+                                        >
                                             {comment.author_name}
-                                        </span>
+                                        </Link>
                                         <span className="text-muted-foreground text-xs">
                                             {format(new Date(comment.created_at), "yyyy-MM-dd HH:mm")}
                                         </span>

@@ -15,6 +15,7 @@ export async function updateProfileAction(
 
     const username = formData.get("username") as string;
     const avatarUrl = formData.get("avatar_url") as string;
+    const bio = formData.get("bio") as string;
 
     const supabase = await createClient();
 
@@ -50,6 +51,7 @@ export async function updateProfileAction(
         .update({
             username: username,
             avatar_url: avatarUrl,
+            bio: bio,
             username_last_changed: username !== userWithProfile.profile.username ? new Date().toISOString() : userWithProfile.profile.username_last_changed
         })
         .eq("id", userWithProfile.id);

@@ -111,7 +111,7 @@ export function UserNav({ initialUser }: { initialUser: any }) {
                         {profile?.username || "我的花园"}
                     </span>
                     <span className="text-[10px] text-muted-foreground opacity-60">
-                        {profile?.role === "super_admin" ? "博主" : profile?.role === "admin" ? "管理员" : "花友"}
+                        {profile?.role === "super_admin" ? "园长" : profile?.role === "admin" ? "管理员" : "花友"}
                     </span>
                 </div>
             </Link>
