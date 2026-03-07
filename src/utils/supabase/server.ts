@@ -24,6 +24,19 @@ export async function createClient() {
                     }
                 },
             },
+            global: {
+                fetch: (...args: Parameters<typeof fetch>) => {
+                    // 给 Supabase 的 fetch 请求加上 15 秒超时
+                    const [input, init] = args;
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                    return fetch(input, {
+                        ...init,
+                        signal: controller.signal,
+                    }).finally(() => clearTimeout(timeoutId));
+                },
+            },
         }
     )
 }

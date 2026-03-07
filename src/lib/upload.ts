@@ -46,3 +46,44 @@ export async function uploadBlob(
     const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
     return data.publicUrl;
 }
+
+/**
+ * 从 URL 中提取文件名并从存储中删除
+ * @param url 图片的公开 URL
+ * @param supabaseClient 可选，传递已认证的 supabase 客户端（如在 Server Actions 中使用）
+ */
+export async function deleteImageFromUrl(
+    url: string | null | undefined,
+    supabaseClient?: any
+) {
+    if (!url) return;
+    try {
+        const client = supabaseClient || supabase;
+        // Supabase URL 格式: .../storage/v1/object/public/public-images/FILENAME
+        const parts = url.split("/");
+        const fileName = parts[parts.length - 1];
+
+        if (fileName && fileName.includes("?")) {
+            // 处理带有查询参数的 URL
+            const cleanFileName = fileName.split("?")[0];
+            await client.storage.from(BUCKET_NAME).remove([cleanFileName]);
+        } else if (fileName) {
+            await client.storage.from(BUCKET_NAME).remove([fileName]);
+        }
+    } catch (e) {
+        console.error("Failed to delete image from storage:", e);
+    }
+}
+
+/**
+ * 从 Markdown 文本中提取所有图片 URL
+ */
+export function extractImageUrls(markdown: string): string[] {
+    const urls: string[] = [];
+    const regex = /!\[.*?\]\((.*?)\)/g;
+    let match;
+    while ((match = regex.exec(markdown)) !== null) {
+        if (match[1]) urls.push(match[1]);
+    }
+    return urls;
+}

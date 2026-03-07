@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser, checkIsSuperAdmin } from "@/lib/auth";
+import { deleteImageFromUrl } from "@/lib/upload";
 
 /** 更新用户信息 */
 export async function updateProfileAction(
@@ -16,6 +17,11 @@ export async function updateProfileAction(
     const avatarUrl = formData.get("avatar_url") as string;
 
     const supabase = await createClient();
+
+    // 如果上传了新头像，且原先有头像，则删除旧头像
+    if (avatarUrl && userWithProfile.profile.avatar_url && avatarUrl !== userWithProfile.profile.avatar_url) {
+        await deleteImageFromUrl(userWithProfile.profile.avatar_url, supabase);
+    }
 
     // 检查用户名变更限制 (30天)
     if (username !== userWithProfile.profile.username) {

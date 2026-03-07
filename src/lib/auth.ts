@@ -2,19 +2,30 @@ import { createClient } from "@/utils/supabase/server";
 
 /**
  * 获取当前登录用户及个人资料
+ * 网络错误时返回 null，不会导致页面崩溃
  */
 export async function getCurrentUser() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+        if (userError || !user) {
+            return null;
+        }
 
-    return { ...user, profile };
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+        return { ...user, profile };
+    } catch (err: any) {
+        // 网络超时 / ECONNRESET / TLS 失败等
+        const msg = err?.cause?.code || err?.message || 'unknown';
+        console.warn(`[auth] getCurrentUser failed: ${msg}`);
+        return null;
+    }
 }
 
 /**

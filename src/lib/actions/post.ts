@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { uploadImage } from "@/lib/upload";
+import { uploadImage, deleteImageFromUrl, extractImageUrls } from "@/lib/upload";
 import type { ActionResult } from "@/lib/types";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -85,6 +85,15 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
     };
 
     if (coverImageUrl) {
+        // 删除旧封面图
+        const { data: oldPost } = await supabase
+            .from("posts")
+            .select("cover_image")
+            .eq("id", id)
+            .single();
+        if (oldPost?.cover_image) {
+            await deleteImageFromUrl(oldPost.cover_image, supabase);
+        }
         updateData.cover_image = coverImageUrl;
     }
 
@@ -104,6 +113,26 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
 /** 删除文章 */
 export async function deletePost(id: string): Promise<void> {
     const supabase = await createClient();
+
+    // 1. 先获取文章信息以删除关联图片
+    const { data: post } = await supabase
+        .from("posts")
+        .select("content, cover_image")
+        .eq("id", id)
+        .single();
+
+    if (post) {
+        // 删除封面图
+        if (post.cover_image) {
+            await deleteImageFromUrl(post.cover_image, supabase);
+        }
+        // 解析正文图片并删除
+        const imageUrls = extractImageUrls(post.content);
+        for (const url of imageUrls) {
+            await deleteImageFromUrl(url, supabase);
+        }
+    }
+
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) throw new Error(error.message);
     revalidatePath("/");

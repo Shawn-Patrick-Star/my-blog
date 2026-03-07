@@ -1,17 +1,19 @@
 "use client";
 
-import { Search, ListFilter, Tag, Clock } from "lucide-react";
+import { Search, ListFilter, Tag, Clock, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 interface BlogFiltersProps {
     categories: string[];
     tags: string[];
+    isAdmin?: boolean;
 }
 
-export function BlogFilters({ categories, tags }: BlogFiltersProps) {
+export function BlogFilters({ categories, tags, isAdmin }: BlogFiltersProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -36,12 +38,12 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
         <div className="space-y-4 w-full relative z-10">
             {/* 1. 主控行：搜索框 + 视图切换 (桌面端单行，移动端自适应折行) */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-3 w-full">
-                
+
                 {/* 左侧搜索框：占据剩余的弹性空间 */}
                 <div className="relative w-full md:flex-1 group">
-                    <Search 
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-300" 
-                        size={18} 
+                    <Search
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 group-focus-within:text-primary transition-colors duration-300"
+                        size={18}
                     />
                     <Input
                         placeholder="搜索笔记标题或内容..."
@@ -49,9 +51,9 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                         defaultValue={currentQuery}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                                updateParams({ 
-                                    q: e.currentTarget.value || null, 
-                                    view: e.currentTarget.value ? "search" : "timeline" 
+                                updateParams({
+                                    q: e.currentTarget.value || null,
+                                    view: e.currentTarget.value ? "search" : "timeline"
                                 });
                             }
                         }}
@@ -59,31 +61,48 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                 </div>
 
                 {/* 右侧视图切换器：内阴影毛玻璃效果，包裹按钮 */}
-                <div className="flex items-center p-1.5 bg-secondary/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-inner w-full md:w-auto shrink-0 overflow-x-auto scrollbar-hide">
-                    {[
-                        { id: "timeline", label: "时间线", icon: Clock },
-                        { id: "category", label: "分类", icon: ListFilter },
-                        { id: "tag", label: "标签", icon: Tag },
-                    ].map((tab) => (
+                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto scrollbar-hide py-1">
+                    {/* 管理员专属：新建笔记按钮 */}
+                    {isAdmin && (
                         <Button
-                            key={tab.id}
-                            variant="ghost"
+                            asChild
+                            variant="default"
                             size="sm"
-                            onClick={() => updateParams({ view: tab.id, cat: null, tag: null, q: null })}
-                            className={cn(
-                                "rounded-xl px-4 md:px-5 h-9 flex items-center gap-2 transition-all duration-300 font-medium whitespace-nowrap",
-                                currentView === tab.id
-                                    ? "bg-background text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                            )}
+                            className="rounded-xl px-4 h-9 flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm shadow-primary/20 shrink-0 font-bold transition-all duration-300 transform active:scale-95"
                         >
-                            <tab.icon size={15} className={cn(
-                                "transition-transform duration-500", 
-                                currentView === tab.id ? "scale-110" : "opacity-70"
-                            )} />
-                            {tab.label}
+                            <Link href="/admin/write">
+                                <Plus size={15} />
+                                新建笔记
+                            </Link>
                         </Button>
-                    ))}
+                    )}
+
+                    <div className="flex items-center p-1 bg-secondary/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-inner shrink-0 leading-none">
+                        {[
+                            { id: "timeline", label: "时间线", icon: Clock },
+                            { id: "category", label: "分类", icon: ListFilter },
+                            { id: "tag", label: "标签", icon: Tag },
+                        ].map((tab) => (
+                            <Button
+                                key={tab.id}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateParams({ view: tab.id, cat: null, tag: null, q: null })}
+                                className={cn(
+                                    "rounded-xl px-4 md:px-5 h-9 flex items-center gap-2 transition-all duration-300 font-medium whitespace-nowrap",
+                                    currentView === tab.id
+                                        ? "bg-background text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                                )}
+                            >
+                                <tab.icon size={15} className={cn(
+                                    "transition-transform duration-500",
+                                    currentView === tab.id ? "scale-110" : "opacity-70"
+                                )} />
+                                {tab.label}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
-import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save } from "lucide-react";
+import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save, Grid } from "lucide-react";
 import Image from "next/image";
 import type { ActionResult } from "@/lib/types";
 
@@ -38,6 +38,7 @@ export function PostEditor({
   const [isPreview, setIsPreview] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
+  const [pendingImages, setPendingImages] = useState<{ originalPath: string; status: 'pending' | 'uploading' | 'done', newUrl?: string }[]>([]);
 
   const draftKey = `draft-${initialData?.id || "new"}`;
 
@@ -108,6 +109,64 @@ export function PostEditor({
       setContent((prev: string) => prev + imageMarkdown);
     } catch (err: any) {
       alert("上传失败: " + err.message);
+    } finally {
+      e.target.value = "";
+    }
+  }
+
+  // Markdown 文件导入
+  async function handleMarkdownUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".md")) {
+      alert("请选择 .md 格式的 Markdown 文件");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      setContent(text);
+
+      // 检查是否有本地图片引用 (非 http/https/data 开头的图片链接)
+      const localImageRegex = /!\[.*?\]\((?!http|https|data:)(.*?)\)/g;
+      const matches = [...text.matchAll(localImageRegex)];
+      if (matches.length > 0) {
+        const uniquePaths = Array.from(new Set(matches.map(m => m[1])));
+        setPendingImages(uniquePaths.map(path => ({ originalPath: path, status: 'pending' as const })));
+      } else {
+        setPendingImages([]);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  // 上传选定的本地缺失图片并自动替换
+  async function handlePendingImageUpload(e: React.ChangeEvent<HTMLInputElement>, originalPath: string) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPendingImages(prev => prev.map(p => p.originalPath === originalPath ? { ...p, status: 'uploading' } : p));
+
+    try {
+      const fileName = `body-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
+      const { error } = await supabase.storage
+        .from("public-images")
+        .upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage
+        .from("public-images")
+        .getPublicUrl(fileName);
+
+      // 精确替换对应的本地路径为 Supabase URL
+      setContent((prev: string) => prev.split(`](${originalPath})`).join(`](${data.publicUrl})`));
+
+      setPendingImages(prev => prev.map(p => p.originalPath === originalPath ? { ...p, status: 'done', newUrl: data.publicUrl } : p));
+    } catch (err: any) {
+      alert("上传失败: " + err.message);
+      setPendingImages(prev => prev.map(p => p.originalPath === originalPath ? { ...p, status: 'pending' } : p));
     } finally {
       e.target.value = "";
     }
@@ -200,7 +259,7 @@ export function PostEditor({
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Heading size={16} className="text-primary" /> 分类
+              <Grid size={16} className="text-primary" /> 分类
             </label>
             <Input
               name="category"
@@ -256,22 +315,33 @@ export function PostEditor({
         </div>
 
         {/* 正文区域 —— 编辑 / 预览切换 */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <FileText size={16} className="text-primary" /> 正文内容 (Markdown)
             </label>
             <div className="flex items-center gap-2">
               {!isPreview && (
-                <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm">
-                  <Upload size={12} /> 插入图片
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={handleBodyImageUpload}
-                    accept="image/*"
-                  />
-                </label>
+                <>
+                  <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm">
+                    <FileText size={12} /> 导入 MD
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={handleMarkdownUpload}
+                      accept=".md"
+                    />
+                  </label>
+                  <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm mr-1">
+                    <Upload size={12} /> 插入图片
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={handleBodyImageUpload}
+                      accept="image/*"
+                    />
+                  </label>
+                </>
               )}
               <Button
                 type="button"
@@ -292,6 +362,39 @@ export function PostEditor({
               </Button>
             </div>
           </div>
+
+          {/* 本地图片快速上传处理面板 */}
+          {pendingImages.length > 0 && !isPreview && (
+            <div className="p-4 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/30 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 transition-colors">
+              <div className="flex items-start justify-between">
+                <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-500 flex items-center gap-2">
+                  <ImageIcon size={16} /> 发现 MD 包含本地图片引用，请上传对应的图片以替换：
+                </h4>
+                {pendingImages.every(p => p.status === 'done') && (
+                  <Button variant="ghost" size="sm" onClick={() => setPendingImages([])} className="h-6 text-xs text-muted-foreground hover:text-foreground">隐藏完成项</Button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
+                {pendingImages.map((img, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-3 text-sm bg-background p-2.5 rounded-lg border border-border shadow-sm">
+                    <code className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded max-w-[50%] truncate" title={img.originalPath}>{img.originalPath}</code>
+                    {img.status === 'done' ? (
+                      <span className="text-emerald-500 font-medium text-xs px-2.5 py-1 bg-emerald-500/10 rounded-md">替换完成 ✓</span>
+                    ) : img.status === 'uploading' ? (
+                      <span className="text-yellow-600 dark:text-yellow-500 font-medium animate-pulse text-xs px-2.5 py-1 bg-yellow-500/10 rounded-md flex items-center gap-1.5">
+                        <Loader2 size={12} className="animate-spin" /> 上传中...
+                      </span>
+                    ) : (
+                      <label className="bg-primary/10 hover:bg-primary/20 text-primary text-xs px-3 py-1 cursor-pointer rounded-md transition-colors font-medium border border-primary/20 hover:border-primary/40 shrink-0">
+                        选择并替换
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePendingImageUpload(e, img.originalPath)} />
+                      </label>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isPreview ? (
             <div className="p-6 bg-card border border-border rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">

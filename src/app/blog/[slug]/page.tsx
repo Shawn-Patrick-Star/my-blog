@@ -76,7 +76,7 @@ export default async function BlogPost({
         {/* 两列布局：左侧目录卡片 + 右侧内容卡片 */}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
           {/* 左侧目录卡片 - 只在桌面显示 */}
-          <div className="hidden lg:block sticky top-24">
+          <div className="hidden lg:block sticky top-24 self-start">
             <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6">
               {/* 返回链接 */}
               <Link

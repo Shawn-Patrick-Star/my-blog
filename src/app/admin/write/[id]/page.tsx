@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import { PostEditor } from "@/components/post-editor";
 import { updatePost, getCategories } from "@/lib/actions/post";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 export default async function EditPostPage({
   params,
@@ -19,5 +20,10 @@ export default async function EditPostPage({
 
   const categories = await getCategories();
 
-  return <PostEditor initialData={post} categories={categories} action={updatePost} title="编辑笔记" />;
+  return (
+    <>
+      <PostEditor initialData={post} categories={categories} action={updatePost} title="编辑笔记" />
+      <ScrollToTop />
+    </>
+  );
 }

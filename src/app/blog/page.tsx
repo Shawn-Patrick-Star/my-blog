@@ -87,7 +87,7 @@ export default async function BlogListPage({
           */}
           <div className="sticky top-4 z-40 p-2 md:p-3 bg-background/70 backdrop-blur-xl border border-border/60 rounded-2xl shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition-all">
             <Suspense fallback={<div className="h-12 w-full animate-pulse bg-muted rounded-2xl" />}>
-              <BlogFilters categories={categories} tags={tags} />
+              <BlogFilters categories={categories} tags={tags} isAdmin={isAdmin} />
             </Suspense>
           </div>
         </header>
