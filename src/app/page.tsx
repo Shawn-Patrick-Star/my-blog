@@ -78,7 +78,7 @@ export default async function Home({
       .from("comments")
       .select("*")
       .in("moment_id", momentIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
     if (data) allComments = data;
   }
 
@@ -161,7 +161,7 @@ export default async function Home({
                       key={item.id}
                       id={item.id}
                       content={item.content}
-                      createdAt={item.created_at}
+                      created_at={item.created_at}
                       images={item.images}
                       likes={item.likes}
                       comments={momentComments}

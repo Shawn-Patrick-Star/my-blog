@@ -86,7 +86,7 @@ export function UserNav({ initialUser }: { initialUser: any }) {
             <Link href="/notifications" className="relative p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-accent transition-all">
                 <Bell size={18} />
                 {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-[10px] text-primary-foreground font-black rounded-full flex items-center justify-center ring-2 ring-background">
+                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-primary text-[10px] text-primary-foreground font-black rounded-full flex items-center justify-center ring-2 ring-background">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}

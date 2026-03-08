@@ -4,18 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
-  // 1. 【新增逻辑】专门保护 /admin 路径
-  if (url.pathname.startsWith('/admin')) {
-    const cookie = request.cookies.get("admin_session");
-    const isAuth = cookie?.value === "true";
-
-    if (!isAuth) {
-      // 如果没有管理员 Cookie，直接踢到登录页
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-  }
-
-  // 2. 原有的 Supabase Session 刷新逻辑 (保持不变)
+  // 1. 初始化 Supabase
   let supabaseResponse = NextResponse.next({ request })
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,10 +23,27 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  try {
-    await supabase.auth.getUser()
-  } catch (e) {
-    // 静默处理错误
+  // 获取用户信息
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // 2. 专门保护 /admin 路径
+  if (url.pathname.startsWith('/admin')) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // 检查角色
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+    if (!isAdmin) {
+      // 如果不是管理员，回首页
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return supabaseResponse

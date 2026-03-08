@@ -47,7 +47,7 @@ export default async function CommunityPage({
             .from("comments")
             .select("*")
             .in("moment_id", momentIds)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: true });
         if (data) allComments = data;
     }
 
@@ -106,25 +106,42 @@ export default async function CommunityPage({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-6">
-                    {moments?.map((item) => {
-                        const momentComments = allComments.filter(c => c.moment_id === item.id);
-                        return (
-                            <MomentCard
-                                key={item.id}
-                                id={item.id}
-                                content={item.content}
-                                created_at={item.created_at}
-                                images={item.images}
-                                likes={item.likes}
-                                comments={momentComments}
-                                isAdmin={isAdmin}
-                                author={item.author}
-                            />
-                        );
-                    })}
+                <div className="bg-muted/30 backdrop-blur-sm rounded-[42px] border border-border/40 p-4 md:p-8 mt-6 relative overflow-hidden">
+                    {/* 装饰性背景 */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -ml-32 -mb-32" />
+
+                    <div className="flex flex-col gap-2 relative z-10 max-w-4xl mx-auto">
+                        {(() => {
+                            let lastAuthorId = "";
+                            let currentAlign: 'left' | 'right' = 'right';
+
+                            return moments?.map((item) => {
+                                if (item.author_id !== lastAuthorId) {
+                                    currentAlign = currentAlign === 'left' ? 'right' : 'left';
+                                    lastAuthorId = item.author_id || "";
+                                }
+                                const momentComments = allComments.filter(c => c.moment_id === item.id);
+                                return (
+                                    <MomentCard
+                                        key={item.id}
+                                        id={item.id}
+                                        content={item.content}
+                                        created_at={item.created_at}
+                                        images={item.images}
+                                        likes={item.likes}
+                                        comments={momentComments}
+                                        isAdmin={isAdmin}
+                                        author={item.author}
+                                        align={currentAlign}
+                                    />
+                                );
+                            });
+                        })()}
+                    </div>
+
                     {moments?.length === 0 && (
-                        <div className="col-span-full py-20 text-center space-y-4">
+                        <div className="py-20 text-center space-y-4">
                             <div className="text-6xl">🏜️</div>
                             <p className="text-muted-foreground font-bold">还没有人发布动态，快来当第一个吧！</p>
                         </div>

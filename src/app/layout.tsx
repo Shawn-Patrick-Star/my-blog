@@ -4,7 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/theme-provider";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/react";
 import { getCurrentUser } from "@/lib/auth";
 
 // Inter 字体配置（用于正文）
@@ -59,7 +59,7 @@ export default async function RootLayout({
           <Navbar initialUser={userWithProfile} />
           <main className="min-h-screen">{children}</main>
           <Footer />
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

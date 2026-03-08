@@ -132,13 +132,24 @@ export default async function PublicProfilePage({
 
                     <TabsContent value="moments" className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
                         {moments.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {moments.map(moment => (
-                                    <MomentCard
-                                        key={moment.id}
-                                        {...moment}
-                                    />
-                                ))}
+                            <div className="bg-muted/30 backdrop-blur-sm rounded-[40px] border border-border/40 p-4 md:p-8 space-y-2">
+                                {(() => {
+                                    let lastAuthorId = "";
+                                    let currentAlign: 'left' | 'right' = 'left';
+                                    return moments.map((moment) => {
+                                        if (moment.author_id !== lastAuthorId) {
+                                            currentAlign = currentAlign === 'left' ? 'right' : 'left';
+                                            lastAuthorId = moment.author_id || "";
+                                        }
+                                        return (
+                                            <MomentCard
+                                                key={moment.id}
+                                                {...moment}
+                                                align={currentAlign}
+                                            />
+                                        );
+                                    });
+                                })()}
                             </div>
                         ) : (
                             <div className="py-24 text-center bg-muted/5 rounded-[40px] border-2 border-dashed border-border/40">

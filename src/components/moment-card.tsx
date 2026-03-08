@@ -10,6 +10,7 @@ import { LikeButton } from "@/components/like-button";
 import type { Comment, Profile } from "@/lib/types";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MomentCardProps {
   id?: string;
@@ -20,6 +21,7 @@ interface MomentCardProps {
   comments?: Comment[];
   isAdmin?: boolean;
   author?: Profile;
+  align?: 'left' | 'right';
 }
 
 export function MomentCard({
@@ -31,6 +33,7 @@ export function MomentCard({
   comments = [],
   isAdmin,
   author,
+  align = 'left',
 }: MomentCardProps) {
   const [isReplying, setIsReplying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -71,130 +74,146 @@ export function MomentCard({
     }
   };
 
+  const isRight = align === 'right';
+
   return (
-    <Card className="w-full border-border shadow-sm hover:shadow-md transition-shadow bg-card group relative rounded-3xl overflow-hidden">
-      <CardHeader className="flex flex-row items-center gap-3 p-4 pb-2">
-        <Link href={`/profile/${author?.id}`} className="h-10 w-10 rounded-full bg-accent border border-border flex items-center justify-center overflow-hidden shrink-0 hover:ring-2 hover:ring-primary/20 transition-all">
-          {author?.avatar_url ? (
-            <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
-          ) : (
-            <UserIcon size={18} className="text-muted-foreground" />
-          )}
-        </Link>
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5">
-            <Link href={`/profile/${author?.id}`} className="text-sm font-bold text-foreground hover:text-primary transition-colors">
-              {author?.username || "未知用户"}
-            </Link>
+    <div className={cn(
+      "flex flex-col w-full animate-in fade-in slide-in-from-bottom-4 duration-500",
+      "mb-6 pb-6 border-b border-border/40 last:border-0 last:mb-0 last:pb-0"
+    )}>
+      <div className={cn(
+        "flex w-full gap-2",
+        isRight ? "flex-row-reverse" : "flex-row"
+      )}>
+        {/* 头像区域 - 独立出来 */}
+        <div className="shrink-0 pt-1">
+          <Link
+            href={`/profile/${author?.id}`}
+            className="h-12 w-12 rounded-2xl bg-accent border-2 border-background shadow-sm flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary/20 transition-all"
+          >
+            {author?.avatar_url ? (
+              <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
+            ) : (
+              <UserIcon size={24} className="text-muted-foreground" />
+            )}
+          </Link>
+        </div>
+
+        {/* 消息气泡整体 */}
+        <div className={cn(
+          "flex flex-col max-w-[75%] md:max-w-[65%] lg:max-w-[50%]",
+          isRight ? "items-end" : "items-start"
+        )}>
+          {/* 用户名和标签 - 位于气泡上方 */}
+          <div className={cn(
+            "flex items-center gap-2 mb-2 px-1",
+            isRight ? "flex-row-reverse" : "flex-row"
+          )}>
+            <span className="text-sm font-bold text-foreground/90">{author?.username || "未知用户"}</span>
             {author?.role === "super_admin" && (
-              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">园长</span>
+              <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-black">园长</span>
             )}
             {author?.role === "admin" && (
-              <span className="text-[10px] bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded-full font-bold">管理</span>
+              <span className="text-[12px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full font-black">管理</span>
             )}
+            <span className="text-[14px] text-muted-foreground opacity-60">
+              {created_at ? format(new Date(created_at), "MM-dd HH:mm") : "未知时间"}
+            </span>
           </div>
-          <span className="text-[10px] text-muted-foreground opacity-70">
-            {created_at ? format(new Date(created_at), "yyyy-MM-dd HH:mm") : "未知时间"}
-          </span>
-        </div>
-      </CardHeader>
 
-      <CardContent className="px-4 pb-4">
-        <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap mb-2">
-          {content}
-        </p>
+          {/* 气泡正文 */}
+          <div className={cn(
+            "relative group p-3 md:p-4 rounded-3xl shadow-sm border transition-all bg-card text-foreground border-border hover:shadow-md",
+            isRight ? "rounded-tr-none" : "rounded-tl-none"
+          )}>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {content}
+            </p>
 
-        {images && images.length > 0 && (
-          <div
-            className={`mt-3 grid gap-2 ${images.length === 1
-              ? "grid-cols-1"
-              : images.length === 2
-                ? "grid-cols-2"
-                : "grid-cols-3"
-              }`}
-          >
-            {images.map((url, index) => (
-              <img
-                key={index}
-                src={url}
-                alt="moment"
-                className="rounded-2xl object-cover w-full aspect-square border border-border/10"
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="mt-4 flex items-center gap-2">
-          {id && <LikeButton targetId={id} targetType="moment" initialLikes={likes} isSmall />}
-          <button
-            onClick={() => setIsReplying(!isReplying)}
-            className="text-xs text-muted-foreground hover:text-primary px-3 py-1.5 rounded-full hover:bg-accent transition-colors flex items-center gap-1 border border-border/50"
-          >
-            <MessageCircle size={14} /> 评论
-          </button>
-        </div>
-
-        {/* 紧凑版评论列表 */}
-        {comments.length > 0 && (
-          <div className="mt-3 bg-muted/20 p-3 rounded-2xl border border-border/30 space-y-2">
-            {(isExpanded ? comments : comments.slice(0, 2)).map((comment) => (
-              <div key={comment.id} className="text-sm flex gap-2">
-                <span className="font-bold text-foreground shrink-0">{comment.author_name}:</span>
-                <span className="text-muted-foreground wrap-break-word">{comment.content}</span>
+            {images && images.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-2 w-fit">
+                {images.map((url, index) => (
+                  <img
+                    key={index}
+                    src={url}
+                    alt="moment"
+                    className="rounded-xl object-cover w-20 h-20 md:w-24 md:h-24 aspect-square border border-black/5"
+                  />
+                ))}
               </div>
-            ))}
-            {comments.length > 2 && (
+            )}
+
+            {/* 操作区：点赞、评论按钮 */}
+            <div className="mt-4 flex items-center justify-start gap-3">
+              {id && (
+                <LikeButton
+                  targetId={id}
+                  targetType="moment"
+                  initialLikes={likes}
+                  isSmall
+                />
+              )}
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-xs text-primary hover:text-primary/90 font-bold mt-1 ml-1"
+                onClick={() => setIsReplying(!isReplying)}
+                className="text-[12px] px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 font-bold border bg-muted/50 border-border/50 text-muted-foreground hover:bg-accent hover:text-primary"
               >
-                {isExpanded ? "收起" : `展开全部 ${comments.length} 条评论`}
+                <MessageCircle size={14} /> 评论
               </button>
+
+              {/* 管理员/作者本人 删除按钮 */}
+              {(isAdmin || (author && author.id === id)) && id && (
+                <button
+                  onClick={handleDelete}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-red-50/50 text-destructive"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* 紧凑版评论列表 - 放在气泡内底部 */}
+            {comments.length > 0 && (
+              <div className="mt-4 p-3 rounded-2xl border bg-muted/30 border-border/10 space-y-2">
+                {(isExpanded ? comments : comments.slice(0, 2)).map((comment) => (
+                  <div key={comment.id} className="text-[13px] flex gap-2">
+                    <span className="font-bold shrink-0 text-foreground">{comment.author_name}:</span>
+                    <span className="wrap-break-word text-muted-foreground leading-relaxed">{comment.content}</span>
+                  </div>
+                ))}
+                {comments.length > 2 && (
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-[12px] font-black mt-1 ml-1 text-primary hover:text-primary/90"
+                  >
+                    {isExpanded ? "收起评论" : `展开全部 ${comments.length} 条评论`}
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        )}
 
-        {/* 回复输入框 */}
-        {isReplying && id && (
-          <form ref={formRef} onSubmit={handleCommentSubmit} className="mt-3 flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-            <input
-              name="content"
-              placeholder="发表你的看法..."
-              required
-              maxLength={200}
-              className="flex-1 px-4 py-2 text-sm rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background/50 text-foreground transition-all"
-            />
-            <Button
-              type="submit"
-              disabled={isPending}
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-4 h-auto py-2 font-bold"
-            >
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "发布"}
-            </Button>
-          </form>
-        )}
-      </CardContent>
-
-      {/* 管理员操作组 */}
-      {(isAdmin || (author && author.id === id)) && id && (
-        <div className="absolute top-4 right-4 flex gap-3 opacity-0 group-hover:opacity-100 transition-all">
-          {isAdmin && (
-            <Link
-              href={`/admin/moments/${id}`}
-              className="text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Edit3 size={18} />
-            </Link>
+          {/* 回复输入框 - 气泡下方 */}
+          {isReplying && id && (
+            <form ref={formRef} onSubmit={handleCommentSubmit} className="mt-3 w-full flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+              <input
+                name="content"
+                placeholder="发表你的看法..."
+                required
+                maxLength={200}
+                className="flex-1 px-4 py-2 text-sm rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 bg-background/50 text-foreground transition-all"
+              />
+              <Button
+                type="submit"
+                disabled={isPending}
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl px-4 h-auto py-2 font-bold"
+              >
+                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "发送"}
+              </Button>
+            </form>
           )}
-          <button
-            onClick={handleDelete}
-            className="text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <Trash2 size={18} />
-          </button>
         </div>
-      )}
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -90,7 +90,7 @@ export default async function UserProfilePage({
                             key={m.id}
                             id={m.id}
                             content={m.content}
-                            createdAt={m.created_at}
+                            created_at={m.created_at}
                             images={m.images}
                             likes={m.likes}
                             author={profile}

@@ -339,14 +339,25 @@ export default function ProfilePage() {
 
                     <TabsContent value="moments" className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
                         {moments.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {moments.map(moment => (
-                                    <MomentCard
-                                        key={moment.id}
-                                        {...moment}
-                                        isAdmin={profile?.role === 'admin' || profile?.role === 'super_admin'}
-                                    />
-                                ))}
+                            <div className="bg-muted/30 backdrop-blur-sm rounded-[32px] border border-border/40 p-4 md:p-6 space-y-2">
+                                {(() => {
+                                    let lastAuthorId = "";
+                                    let currentAlign: 'left' | 'right' = 'left';
+                                    return moments.map((moment) => {
+                                        if (moment.author_id !== lastAuthorId) {
+                                            currentAlign = currentAlign === 'left' ? 'right' : 'left';
+                                            lastAuthorId = moment.author_id || "";
+                                        }
+                                        return (
+                                            <MomentCard
+                                                key={moment.id}
+                                                {...moment}
+                                                isAdmin={profile?.role === 'admin' || profile?.role === 'super_admin'}
+                                                align={currentAlign}
+                                            />
+                                        );
+                                    });
+                                })()}
                             </div>
                         ) : (
                             <div className="py-20 text-center bg-muted/10 rounded-[32px] border border-dashed border-border/60">

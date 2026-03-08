@@ -32,9 +32,9 @@ export default async function BlogPost({
 
   const { data: comments } = await supabase
     .from("comments")
-    .select("*")
+    .select("*, author:profiles!author_id(avatar_url, username)")
     .eq("post_id", post.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   const isAdmin = await checkIsAdmin();
 
