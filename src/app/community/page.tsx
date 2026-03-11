@@ -72,7 +72,7 @@ export default async function CommunityPage({
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 lg:justify-end">
                         <div className="w-full sm:w-64">
-                            <SearchInput defaultValue={query} placeholder="搜索动态内容..." className="h-9 shadow-sm" />
+                            <SearchInput defaultValue={query} placeholder="搜索动态内容..." />
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">

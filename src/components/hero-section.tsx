@@ -24,7 +24,7 @@ export function HeroSection({
     : initialImage ? [initialImage] : [];
 
   return (
-    <div className="relative w-full h-64 md:h-[400px] rounded-3xl overflow-hidden shadow-2xl group mb-10 bg-muted">
+    <div className="relative w-full h-64 md:h-[400px] rounded-3xl overflow-hidden shadow-2xl group bg-muted transition-all duration-500">
 
       <HeroSlider images={displayImages} />
 

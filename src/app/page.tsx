@@ -2,14 +2,13 @@ import { createClient } from "@/utils/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { HeroSection } from "@/components/hero-section";
 import { BlogCard } from "@/components/blog-card";
-import { MomentCard } from "@/components/moment-card";
 import { SearchInput } from "@/components/search-input";
 import { SectionHeader } from "@/components/section-header";
 import { QuoteCard } from "@/components/quote-card";
 import type { QuoteItem } from "@/components/quote-card";
 import { HomeSidebar } from "@/components/home-sidebar";
 import { VisitTracker } from "@/components/visit-tracker";
-import type { Post, Moment } from "@/lib/types";
+import type { Post } from "@/lib/types";
 
 export default async function Home({
   searchParams,
@@ -25,8 +24,7 @@ export default async function Home({
     userWithProfile,
     { data: configs },
     { data: stats },
-    { data: posts },
-    { data: moments }
+    { data: posts }
   ] = await Promise.all([
     getCurrentUser(),
     supabase.from("site_config").select("key, value"),
@@ -37,14 +35,7 @@ export default async function Home({
       .eq("is_published", true)
       .ilike("title", query ? `%${query}%` : "%%") // 这里的 query 直接用入参
       .order("created_at", { ascending: false })
-      .limit(5),
-    supabase
-      .from("moments")
-      .select("*, author:profiles!author_id(*)")
-      .ilike("content", query ? `%${query}%` : "%%")
-      .order("likes", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(4)
+      .limit(5)
   ]);
 
   const isAdmin = userWithProfile?.profile.role === "admin" || userWithProfile?.profile.role === "super_admin";
@@ -70,22 +61,11 @@ export default async function Home({
     }
   } catch (e) { }
 
-  // 3. 后置处理评论数据 (依赖 moments 的 ID)
-  const momentIds = moments?.map(m => m.id) || [];
-  let allComments: any[] = [];
-  if (momentIds.length > 0) {
-    const { data } = await supabase
-      .from("comments")
-      .select("*")
-      .in("moment_id", momentIds)
-      .order("created_at", { ascending: true });
-    if (data) allComments = data;
-  }
 
   const siteStats = stats || { page_views: 0, unique_visitors: 0 };
 
   return (
-    <div className="py-8 px-4 md:px-8 animate-in fade-in duration-700">
+    <div className="py-20 px-4 md:px-8 animate-in fade-in duration-700">
       <VisitTracker />
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-12 items-start">
@@ -103,15 +83,15 @@ export default async function Home({
             </div>
 
             {/* Hero + 搜索 */}
-            <section>
+            <section className="mb-12 md:mb-20 relative">
               <HeroSection
                 images={heroImages}
                 initialImage={heroImage}
                 title={siteTitle}
                 isAdmin={isAdmin}
               />
-              <div className="max-w-md mx-auto -mt-16 relative z-10 px-4">
-                <SearchInput defaultValue={query} placeholder="发现花园里的精彩时刻..." />
+              <div className="max-w-xl mx-auto -mt-6 md:-mt-7 relative z-20 px-4 sm:px-6">
+                <SearchInput defaultValue={query} size="lg" placeholder="搜索笔记内容，发现花园里的精彩时刻..." />
               </div>
             </section>
 
@@ -145,38 +125,6 @@ export default async function Home({
               </div>
             </section>
 
-            {/* 社区精选 */}
-            <section className="space-y-6">
-              <SectionHeader
-                title="社区精选"
-                actionLabel="去社区看看"
-                actionHref="/community"
-                showAction={true}
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-                {moments?.map((item: Moment) => {
-                  const momentComments = allComments.filter((c: any) => c.moment_id === item.id);
-                  return (
-                    <MomentCard
-                      key={item.id}
-                      id={item.id}
-                      content={item.content}
-                      created_at={item.created_at}
-                      images={item.images}
-                      likes={item.likes}
-                      comments={momentComments}
-                      isAdmin={isAdmin}
-                      author={item.author}
-                    />
-                  );
-                })}
-                {moments?.length === 0 && (
-                  <p className="text-muted-foreground text-center col-span-2 py-10 italic">
-                    还没有精选动态
-                  </p>
-                )}
-              </div>
-            </section>
           </div>
         </div>
       </div>

@@ -12,11 +12,13 @@ import { cn } from "@/lib/utils";
 export function SearchInput({
   defaultValue,
   placeholder = "搜索笔记或动态...",
-  className
+  className,
+  size = "default"
 }: {
   defaultValue: string;
   placeholder?: string;
   className?: string;
+  size?: "default" | "lg";
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -34,15 +36,35 @@ export function SearchInput({
     }
   }, [query, router, pathname, defaultValue]);
 
+  const isLarge = size === "lg";
+
   return (
-    <div className={cn("relative shadow-lg rounded-full", className)}>
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-      <Input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={placeholder}
-        className="pl-10 h-full rounded-full border-border bg-background/80 backdrop-blur focus-visible:ring-primary/20 text-sm"
-      />
+    <div className={cn("relative group transition-all duration-300 w-full", className)}>
+      {/* 只有大尺寸版显示流光光晕 */}
+      {isLarge && (
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+      )}
+      
+      <div className={cn(
+        "relative flex items-center rounded-full bg-background border border-border/60 overflow-hidden transition-all",
+        isLarge 
+          ? "shadow-lg focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary/20" 
+          : "shadow-sm border-border/80"
+      )}>
+        <Search className={cn(
+          "ml-4 text-muted-foreground transition-colors",
+          isLarge ? "w-5 h-5 group-focus-within:text-primary" : "w-4 h-4"
+        )} />
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={placeholder}
+          className={cn(
+            "w-full border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full placeholder:text-muted-foreground/50",
+            isLarge ? "h-12 md:h-14 pl-3 pr-6 text-base md:text-lg" : "h-9 md:h-10 pl-2 pr-4 text-sm"
+          )}
+        />
+      </div>
     </div>
   );
 }
