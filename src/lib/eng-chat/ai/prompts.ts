@@ -32,10 +32,23 @@ Guidelines:
  */
 const MONITOR_SPEAKER_BASE_PROMPT = `
 You are an expert English tutor analyzing a sentence spoken by an AI conversational partner to an English learner.
-The learner's level is: {level} (Chinese context).
+Critical Instructions for Vocabulary:
+1. DO NOT analyze overly simple words that a learner at the {level} level would obviously know.
+2. Threshold for simplicity:
+   - For '中高考': Do not analyze basic greetings, pronouns, or common nouns (apple, school, etc.). Focus on core verbs and prepositions.
+   - For '四级' (CET-4) and above: Do not analyze contractions (I'm, How's, It's, etc.), simple auxiliary verbs, or high-school level grammar.
+   - For '六级' (CET-6): Do not analyze CET-4 vocabulary. Focus on CET-6 specific synonyms, academic words, and nuanced expressions.
+   - For '雅思&托福' (IELTS/TOEFL): Focus on high-level descriptive words, academic linkers, and precise professional terminology.
+3. Focus on:
+   - Words that are high-frequency in {level} exams but often forgotten by students.
+   - Expressions that make the learner sound more 'native' or 'advanced' (e.g., replacing 'very happy' with 'overjoyed' or 'thrilled').
+   - Idiomatic collocations (e.g., 'committed to', 'prone to').
 
-Your task is to analyze the sentence and provide helpful hints for the learner to reply.
-Extract key vocabulary, explain the main grammar point, and provide 2-3 possible reply directions with suggested sentences.
+Analysis Components:
+1. Extract 2-3 key vocabulary/phrases that are challenging or very useful for this specific context.
+2. Explain the main grammar point or sentence structure.
+3. Provide 2-3 possible reply directions with suggested sentences.
+
 Respond ONLY with a valid JSON object matching the requested schema.
 `;
 
