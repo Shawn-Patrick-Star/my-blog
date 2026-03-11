@@ -21,8 +21,10 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     const [isAtTop, setIsAtTop] = useState(true);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isMouseInsideRef = useRef(false);
-    // 添加 navRef 定义
     const navRef = useRef<HTMLDivElement>(null);
+
+    // 判断是否为 /eng-chat 页面
+    const isEngChatPage = pathname === '/eng-chat';
 
     // 监听滚动位置
     useEffect(() => {
@@ -30,16 +32,24 @@ export function Navbar({ initialUser }: { initialUser: any }) {
             const scrollTop = window.scrollY;
             const atTop = scrollTop < 10;
             setIsAtTop(atTop);
-
-            // 如果滚动到顶部，确保导航栏显示
-            if (atTop) {
-                setIsVisible(true);
-                if (timeoutRef.current) {
-                    clearTimeout(timeoutRef.current);
-                    timeoutRef.current = null;
+            
+            // 只有在不是 eng-chat 页面时才应用“滚动到顶部显示”的规则
+            if (!isEngChatPage) {
+                // 如果滚动到顶部，确保导航栏显示
+                if (atTop) {
+                    setIsVisible(true);
+                    if (timeoutRef.current) {
+                        clearTimeout(timeoutRef.current);
+                        timeoutRef.current = null;
+                    }
+                } else {
+                    // 如果不在顶部且鼠标也不在导航栏内，启动隐藏计时器
+                    if (!isMouseInsideRef.current) {
+                        startHideTimer();
+                    }
                 }
             } else {
-                // 如果不在顶部且鼠标也不在导航栏内，启动隐藏计时器
+                // 在 eng-chat 页面：无论是否在顶部，只要鼠标不在导航栏内就启动隐藏计时器
                 if (!isMouseInsideRef.current) {
                     startHideTimer();
                 }
@@ -50,12 +60,16 @@ export function Navbar({ initialUser }: { initialUser: any }) {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => {
                 setIsVisible(false);
-            }, 1000);
+            }, 2000);
         };
 
         window.addEventListener('scroll', handleScroll);
+        
+        // 初始调用
+        handleScroll();
+
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []); // 注意：这里不需要依赖 isMouseInsideRef，因为我们用 ref 来跟踪
+    }, [isEngChatPage]); // 添加 isEngChatPage 作为依赖
 
     const showNav = () => {
         isMouseInsideRef.current = true;
@@ -68,10 +82,10 @@ export function Navbar({ initialUser }: { initialUser: any }) {
 
     const hideNav = () => {
         isMouseInsideRef.current = false;
-
-        // 如果在顶部，不隐藏导航栏
-        if (isAtTop) return;
-
+        
+        // 如果不是 eng-chat 页面且在顶部，不隐藏导航栏
+        if (!isEngChatPage && isAtTop) return;
+        
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         timeoutRef.current = setTimeout(() => {
             setIsVisible(false);
@@ -80,12 +94,14 @@ export function Navbar({ initialUser }: { initialUser: any }) {
 
     // 处理鼠标离开导航栏区域
     const handleMouseLeave = () => {
-        // 只有在不是顶部的情况下才启动隐藏计时器
-        if (!isAtTop) {
-            hideNav();
-        } else {
+        // 如果不是 eng-chat 页面且在顶部，不隐藏
+        if (!isEngChatPage && isAtTop) {
             isMouseInsideRef.current = false;
+            return;
         }
+        
+        // 其他情况都允许隐藏
+        hideNav();
     };
 
     // 添加页面可见性变化监听
@@ -98,16 +114,35 @@ export function Navbar({ initialUser }: { initialUser: any }) {
                     timeoutRef.current = null;
                 }
             } else {
-                // 标签页显示时，根据当前位置和鼠标状态决定是否隐藏
-                if (!isAtTop && !isMouseInsideRef.current) {
-                    hideNav();
+                // 标签页显示时，根据页面类型和鼠标状态决定是否隐藏
+                if (isEngChatPage) {
+                    // eng-chat 页面：只要鼠标不在内就隐藏
+                    if (!isMouseInsideRef.current) {
+                        hideNav();
+                    }
+                } else {
+                    // 其他页面：不在顶部且鼠标不在内才隐藏
+                    if (!isAtTop && !isMouseInsideRef.current) {
+                        hideNav();
+                    }
                 }
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [isAtTop]);
+    }, [isAtTop, isEngChatPage]);
+
+    // 初始化显示（对 eng-chat 页面特殊处理）
+    useEffect(() => {
+        if (isEngChatPage) {
+            // eng-chat 页面：初始显示，但启动隐藏计时器
+            setIsVisible(true);
+            if (!isMouseInsideRef.current) {
+                hideNav();
+            }
+        }
+    }, [isEngChatPage]);
 
     // Clean up timeout on unmount
     useEffect(() => {
@@ -117,7 +152,7 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     }, []);
 
     return (
-        <div
+        <div 
             ref={navRef}
             className="fixed top-0 left-0 w-full z-50 group"
             onMouseEnter={showNav}
@@ -125,11 +160,11 @@ export function Navbar({ initialUser }: { initialUser: any }) {
         >
             <div className={cn(
                 "w-full px-4 flex justify-center transition-all duration-500 ease-out",
-                isVisible
-                    ? "translate-y-0 opacity-100"
+                isVisible 
+                    ? "translate-y-0 opacity-100" 
                     : "-translate-y-full opacity-0"
             )}>
-                <nav className="flex h-16 w-full max-w-4xl items-center justify-between rounded-full border border-border/50 bg-card backdrop-blur-xl px-6 shadow-lg transition-all duration-300">
+                <nav className="flex h-14 w-full max-w-4xl items-center justify-between rounded-full border border-border/50 bg-card backdrop-blur-xl px-6 shadow-lg transition-all duration-300">
                     {/* Logo */}
                     <Link
                         href="/"
