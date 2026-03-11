@@ -26,7 +26,7 @@ export default function EngChatPage() {
   };
 
   return (
-    <div className="pt-14 h-screen flex flex-col bg-gray-50/50 dark:bg-zinc-950/50 overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex-1 overflow-hidden">
         <MainLayout
           chatArea={

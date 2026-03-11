@@ -24,7 +24,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   if (isSystem) {
     return (
       <div className="flex justify-center my-4">
-        <div className="bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 text-xs px-4 py-2 rounded-full max-w-[80%] text-center">
+        <div className="bg-muted text-muted-foreground text-xs px-4 py-2 rounded-full max-w-[80%] text-center">
           {message.content}
         </div>
       </div>
@@ -35,12 +35,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex w-full mb-6 ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex w-full mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}
     >
-      <div className={`flex max-w-[85%] lg:max-w-[75%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`}>
+      <div className={`flex max-w-[95%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-2`}>
         
         {/* Avatar Placeholder */}
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold ${isUser ? 'bg-indigo-500' : 'bg-emerald-500'}`}>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-primary-foreground text-xs font-bold ${isUser ? 'bg-primary' : 'bg-emerald-500'}`}>
           {isUser ? 'U' : 'AI'}
         </div>
 
@@ -49,8 +49,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <div
             className={`px-4 py-3 rounded-2xl relative group ${
               isUser
-                ? 'bg-indigo-600 text-white rounded-br-sm'
-                : 'bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-800 dark:text-zinc-200 rounded-bl-sm shadow-sm'
+                ? 'bg-primary text-primary-foreground rounded-br-sm'
+                : 'bg-card border border-border text-foreground rounded-bl-sm shadow-sm'
             }`}
           >
             <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -61,18 +61,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 onClick={() => onAnalyzeClick?.(message.id)}
                 className={`absolute -right-10 bottom-1 p-1.5 rounded-full transition-all ${
                   isActiveAnalysis 
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shadow-sm' 
-                    : 'text-gray-300 dark:text-zinc-600 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 opacity-0 group-hover:opacity-100'
+                    ? 'bg-primary/10 text-primary shadow-sm' 
+                    : 'text-muted-foreground/30 hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100'
                 }`}
-                title="Analyze this sentence"
+                title="分析此句子"
               >
                 {message.isAnalyzing ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 ) : (
                   <Search className="w-4 h-4" />
                 )}
                 {message.monitorAnalysis && !isActiveAnalysis && !message.isAnalyzing && (
-                  <span className="absolute top-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border border-white dark:border-zinc-950"></span>
+                  <span className="absolute top-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-background"></span>
                 )}
               </button>
             )}
@@ -83,16 +83,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 onClick={() => onCorrectionClick?.(message.id)}
                 className={`absolute -left-10 bottom-1 p-1.5 rounded-full transition-all ${
                   isActiveAnalysis 
-                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                    : 'text-gray-300 dark:text-zinc-600 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 opacity-0 group-hover:opacity-100'
+                    ? 'bg-primary/10 text-primary shadow-sm' 
+                    : 'text-muted-foreground/30 hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100'
                 }`}
-                title="View corrections"
+                title="查看纠错"
               >
                 {message.isCorrecting ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 ) : message.userCorrection ? (
                   message.userCorrection.has_error ? (
-                    <XCircle className="w-4 h-4 text-red-500" />
+                    <XCircle className="w-4 h-4 text-destructive" />
                   ) : (
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   )
@@ -102,7 +102,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
           
           {/* Timestamp */}
-          <span className={`text-[10px] text-gray-400 px-1 ${isUser ? 'text-right' : 'text-left'}`}>
+          <span className={`text-[10px] text-muted-foreground px-1 ${isUser ? 'text-right' : 'text-left'}`}>
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>

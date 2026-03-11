@@ -49,8 +49,8 @@ export interface Message {
 }
 
 export type ApiMode = 'official' | 'custom';
-export type UserLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
-export type Topic = 'Daily Life' | 'Travel' | 'Workplace' | 'Academic' | 'Custom';
+export type UserLevel = '中高考' | '四级' | '六级' | '雅思&托福' | '留学' | '实用英语';
+export type Topic = '日常生活' | '旅行出行' | '职场办公' | '学术校园' | '自定义';
 
 export interface AppSettings {
   apiMode: ApiMode;

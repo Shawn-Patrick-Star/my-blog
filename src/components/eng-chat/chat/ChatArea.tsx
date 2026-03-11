@@ -47,24 +47,24 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       {hasStarted && <ChatHeader onOpenSettings={() => setIsSettingsOpen(true)} />}
       
       {/* Messages List */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar scroll-smooth">
-        <div className="max-w-3xl mx-auto w-full flex flex-col justify-end min-h-full">
+      <div className="flex-1 overflow-y-auto px-2 py-2 custom-scrollbar scroll-smooth">
+        <div className="max-w-4xl mx-auto w-full flex flex-col justify-end min-h-full">
           {!hasStarted && messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-6 my-auto py-20">
-              <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-10 h-10 text-indigo-500" />
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2 font-fredoka">Ready to practice?</h2>
-                <p className="text-gray-500 dark:text-zinc-400 max-w-md mx-auto">
-                  The AI Speaker will start the conversation based on your chosen topic and CEFR level.
+                <h2 className="text-2xl font-bold text-foreground mb-2 font-fredoka">准备好练习了吗？</h2>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  AI 老师将根据你选定的等级和场景开启对话。
                 </p>
               </div>
               <button
                 onClick={handleStartConversation}
-                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                className="px-8 py-3 bg-primary hover:opacity-90 text-primary-foreground font-medium rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
               >
-                Start Conversation
+                开始对话
               </button>
             </div>
           ) : (
@@ -79,17 +79,17 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 />
               ))}
               
-              {/* Typing Indicator */}
-              {isSpeakerTyping && (
+              {/* Typing Indicator: Only show if speaker is typing but message has NOT appeared yet in the list with content */}
+              {isSpeakerTyping && messages[messages.length - 1]?.role !== 'speaker' && (
                 <div className="flex justify-start mb-6">
-                  <div className="flex items-end gap-2 max-w-[85%] lg:max-w-[75%]">
+                  <div className="flex items-start gap-2 max-w-[95%]">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 text-white text-xs font-bold">
                       AI
                     </div>
-                    <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-4 py-4 rounded-2xl rounded-bl-sm shadow-sm flex items-center gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm flex items-center gap-1">
+                      <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                     </div>
                   </div>
                 </div>

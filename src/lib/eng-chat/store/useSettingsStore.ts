@@ -13,8 +13,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   apiKey: '',
   baseUrl: process.env.NEXT_PUBLIC_AI_BASE_URL || '',
   modelName: process.env.NEXT_PUBLIC_AI_MODEL_NAME || '',
-  userLevel: 'B1',
-  topic: 'Daily Life',
+  userLevel: '四级',
+  topic: '日常生活',
   customTopic: '',
   hasCompletedOnboarding: false,
 };
