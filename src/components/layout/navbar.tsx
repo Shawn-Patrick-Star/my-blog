@@ -9,6 +9,7 @@ import { UserNav } from "@/components/layout/user-nav";
 
 const navLinks = [
     { href: "/", label: "首页" },
+    { href: "/eng-chat", label: "EngChat" },
     { href: "/community", label: "社区" },
     { href: "/blog", label: "笔记" },
     { href: "/about", label: "关于" },
