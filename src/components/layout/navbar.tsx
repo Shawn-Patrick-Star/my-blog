@@ -23,36 +23,11 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     const isMouseInsideRef = useRef(false);
     const navRef = useRef<HTMLDivElement>(null);
 
-    // 判断是否为 /eng-chat 页面
-    const isEngChatPage = pathname === '/eng-chat';
-
     // 监听滚动位置
     useEffect(() => {
         const handleScroll = () => {
-            const scrollTop = window.scrollY;
-            const atTop = scrollTop < 10;
-            setIsAtTop(atTop);
-            
-            // 只有在不是 eng-chat 页面时才应用“滚动到顶部显示”的规则
-            if (!isEngChatPage) {
-                // 如果滚动到顶部，确保导航栏显示
-                if (atTop) {
-                    setIsVisible(true);
-                    if (timeoutRef.current) {
-                        clearTimeout(timeoutRef.current);
-                        timeoutRef.current = null;
-                    }
-                } else {
-                    // 如果不在顶部且鼠标也不在导航栏内，启动隐藏计时器
-                    if (!isMouseInsideRef.current) {
-                        startHideTimer();
-                    }
-                }
-            } else {
-                // 在 eng-chat 页面：无论是否在顶部，只要鼠标不在导航栏内就启动隐藏计时器
-                if (!isMouseInsideRef.current) {
-                    startHideTimer();
-                }
+            if (!isMouseInsideRef.current) {
+                startHideTimer();
             }
         };
 
@@ -64,12 +39,8 @@ export function Navbar({ initialUser }: { initialUser: any }) {
         };
 
         window.addEventListener('scroll', handleScroll);
-        
-        // 初始调用
-        handleScroll();
-
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [isEngChatPage]); // 添加 isEngChatPage 作为依赖
+    }, []);
 
     const showNav = () => {
         isMouseInsideRef.current = true;
@@ -82,10 +53,6 @@ export function Navbar({ initialUser }: { initialUser: any }) {
 
     const hideNav = () => {
         isMouseInsideRef.current = false;
-        
-        // 如果不是 eng-chat 页面且在顶部，不隐藏导航栏
-        if (!isEngChatPage && isAtTop) return;
-        
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         timeoutRef.current = setTimeout(() => {
             setIsVisible(false);
@@ -94,13 +61,6 @@ export function Navbar({ initialUser }: { initialUser: any }) {
 
     // 处理鼠标离开导航栏区域
     const handleMouseLeave = () => {
-        // 如果不是 eng-chat 页面且在顶部，不隐藏
-        if (!isEngChatPage && isAtTop) {
-            isMouseInsideRef.current = false;
-            return;
-        }
-        
-        // 其他情况都允许隐藏
         hideNav();
     };
 
@@ -108,41 +68,31 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                // 标签页隐藏时，清除计时器
                 if (timeoutRef.current) {
                     clearTimeout(timeoutRef.current);
                     timeoutRef.current = null;
                 }
             } else {
-                // 标签页显示时，根据页面类型和鼠标状态决定是否隐藏
-                if (isEngChatPage) {
-                    // eng-chat 页面：只要鼠标不在内就隐藏
-                    if (!isMouseInsideRef.current) {
-                        hideNav();
-                    }
-                } else {
-                    // 其他页面：不在顶部且鼠标不在内才隐藏
-                    if (!isAtTop && !isMouseInsideRef.current) {
-                        hideNav();
-                    }
+                if (!isMouseInsideRef.current) {
+                    hideNav();
                 }
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [isAtTop, isEngChatPage]);
+    }, []);
 
-    // 初始化显示（对 eng-chat 页面特殊处理）
+    // 初始化显示（初始可见，但随后自动隐藏）
     useEffect(() => {
-        if (isEngChatPage) {
-            // eng-chat 页面：初始显示，但启动隐藏计时器
-            setIsVisible(true);
+        setIsVisible(true);
+        const timer = setTimeout(() => {
             if (!isMouseInsideRef.current) {
-                hideNav();
+                setIsVisible(false);
             }
-        }
-    }, [isEngChatPage]);
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, [pathname]);
 
     // Clean up timeout on unmount
     useEffect(() => {

@@ -113,29 +113,46 @@ export default async function CommunityPage({
 
                     <div className="flex flex-col gap-2 relative z-10 max-w-4xl mx-auto">
                         {(() => {
-                            let lastAuthorId = "";
-                            let currentAlign: 'left' | 'right' = 'right';
+                            if (!moments) return null;
 
-                            return moments?.map((item) => {
-                                if (item.author_id !== lastAuthorId) {
-                                    currentAlign = currentAlign === 'left' ? 'right' : 'left';
-                                    lastAuthorId = item.author_id || "";
+                            // 1. 将连续作者的动态进行分组
+                            const groups: { authorId: string; items: any[] }[] = [];
+                            moments.forEach(item => {
+                                const lastGroup = groups[groups.length - 1];
+                                if (lastGroup && lastGroup.authorId === item.author_id) {
+                                    lastGroup.items.push(item);
+                                } else {
+                                    groups.push({ authorId: item.author_id, items: [item] });
                                 }
-                                const momentComments = allComments.filter(c => c.moment_id === item.id);
-                                return (
-                                    <MomentCard
-                                        key={item.id}
-                                        id={item.id}
-                                        content={item.content}
-                                        created_at={item.created_at}
-                                        images={item.images}
-                                        likes={item.likes}
-                                        comments={momentComments}
-                                        isAdmin={isAdmin}
-                                        author={item.author}
-                                        align={currentAlign}
-                                    />
-                                );
+                            });
+
+                            // 2. 从列表底部开始计算对齐方式，确保原有动态位置稳定
+                            // 基准：最底部（最早）的一个作者组始终靠左（或者靠右，只要固定即可）
+                            const totalGroups = groups.length;
+
+                            return groups.map((group, groupIdx) => {
+                                // 关键逻辑：对齐方式取决于“距离底部的距离”
+                                // 这样在顶部（数组开头）增加新组时，旧组的 (totalGroups - 1 - groupIdx) 依然保持不变
+                                const reverseIndex = totalGroups - 1 - groupIdx;
+                                const currentAlign: 'left' | 'right' = reverseIndex % 2 === 0 ? 'left' : 'right';
+
+                                return group.items.map((item) => {
+                                    const momentComments = allComments.filter(c => c.moment_id === item.id);
+                                    return (
+                                        <MomentCard
+                                            key={item.id}
+                                            id={item.id}
+                                            content={item.content}
+                                            created_at={item.created_at}
+                                            images={item.images}
+                                            likes={item.likes}
+                                            comments={momentComments}
+                                            isAdmin={isAdmin}
+                                            author={item.author}
+                                            align={currentAlign}
+                                        />
+                                    );
+                                });
                             });
                         })()}
                     </div>

@@ -35,7 +35,7 @@ export function QuoteCard({ quotes }: QuoteCardProps) {
     const current = displayQuotes[currentIndex];
 
     return (
-        <div className="relative w-full my-12">
+        <div className="relative w-full">
             <div className="relative bg-paper-bg rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-paper-border p-8 md:p-12 overflow-hidden transition-all duration-300">
                 {/* 作文纸条横线 */}
                 <div

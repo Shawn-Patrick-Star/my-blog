@@ -86,7 +86,7 @@ export function UserNav({ initialUser }: { initialUser: any }) {
             <Link href="/notifications" className="relative p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-accent transition-all">
                 <Bell size={18} />
                 {unreadCount > 0 && (
-                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-primary text-[10px] text-primary-foreground font-black rounded-full flex items-center justify-center ring-2 ring-background">
+                    <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-primary text-[8px] text-primary-foreground font-black rounded-full flex items-center justify-center ring-2 ring-background">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -111,7 +111,7 @@ export function UserNav({ initialUser }: { initialUser: any }) {
                         {profile?.username || "我的花园"}
                     </span>
                     <span className="text-[10px] text-muted-foreground opacity-60">
-                        {profile?.role === "super_admin" ? "园长" : profile?.role === "admin" ? "管理员" : "花友"}
+                        {profile?.role === "super_admin" ? "园长" : profile?.role === "admin" ? "园务卿" : "花友"}
                     </span>
                 </div>
             </Link>

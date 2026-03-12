@@ -114,7 +114,7 @@ export function MomentCard({
               <span className="text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-black">园长</span>
             )}
             {author?.role === "admin" && (
-              <span className="text-[12px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full font-black">管理</span>
+              <span className="text-[12px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full font-black">园务卿</span>
             )}
             <span className="text-[14px] text-muted-foreground opacity-60">
               {created_at ? format(new Date(created_at), "MM-dd HH:mm") : "未知时间"}

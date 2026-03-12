@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Bell, Heart, MessageSquare, Clock, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -11,6 +11,7 @@ async function markAllAsRead() {
     const user = await getCurrentUser();
     if (!user) return;
 
+    const supabase = await createClient();
     await supabase
         .from("notifications")
         .update({ is_read: true })
@@ -25,6 +26,7 @@ export default async function NotificationsPage() {
         redirect("/login");
     }
 
+    const supabase = await createClient();
     const { data: notifications } = await supabase
         .from("notifications")
         .select("*, from_profile:profiles!from_user_id(*)")

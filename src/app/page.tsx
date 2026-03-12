@@ -83,7 +83,7 @@ export default async function Home({
             </div>
 
             {/* Hero + 搜索 */}
-            <section className="mb-12 md:mb-20 relative">
+            <section className="relative">
               <HeroSection
                 images={heroImages}
                 initialImage={heroImage}
