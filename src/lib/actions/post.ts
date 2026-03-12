@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { uploadImage, deleteImageFromUrl, extractImageUrls } from "@/lib/upload";
 import type { ActionResult } from "@/lib/types";
 import { getCurrentUser } from "@/lib/auth";
+import fs from "fs";
+import path from "path";
 
 /** 创建文章 */
 export async function createPost(formData: FormData): Promise<ActionResult> {
@@ -163,4 +165,61 @@ export async function getTags(): Promise<string[]> {
     if (error) return [];
     const allTags = data.flatMap(i => i.tags || []);
     return Array.from(new Set(allTags)).filter(Boolean);
+}
+
+/** 同步本地图片到 Supabase (支持绝对和相对路径) */
+export async function syncLocalImages(paths: string[], baseDir?: string): Promise<Record<string, string>> {
+    const supabase = await createClient();
+    const result: Record<string, string> = {};
+
+    for (const localPath of paths) {
+        try {
+            let targetPath = localPath;
+
+            // 1. 处理相对路径：如果不是绝对路径且提供了 baseDir，则进行拼接
+            const isAbsolute = path.isAbsolute(localPath) || /^[a-zA-Z]:/.test(localPath);
+            if (!isAbsolute && baseDir) {
+                targetPath = path.join(baseDir, localPath);
+            }
+
+            // 2. 规范化路径 (处理 file:/// 等)
+            targetPath = targetPath.replace(/^file:\/\/\//, '').replace(/\\/g, '/');
+
+            if (!fs.existsSync(targetPath)) {
+                // 尝试处理常见的路径转义 (如空格变成 %20)
+                const decodedPath = decodeURIComponent(targetPath);
+                if (!fs.existsSync(decodedPath)) continue;
+                targetPath = decodedPath;
+            }
+            const fileBuffer = fs.readFileSync(targetPath);
+            const baseName = path.basename(targetPath).replace(/[^a-zA-Z0-9.]/g, "");
+            const fileName = `sync-${Date.now()}-${baseName || 'image.jpg'}`;
+            
+            const ext = path.extname(targetPath).toLowerCase();
+            const mimeType = ext === '.png' ? 'image/png' : 
+                           ext === '.gif' ? 'image/gif' : 
+                           ext === '.webp' ? 'image/webp' : 
+                           ext === '.svg' ? 'image/svg+xml' : 'image/jpeg';
+
+            const { data, error } = await supabase.storage
+                .from("public-images")
+                .upload(fileName, fileBuffer, {
+                    contentType: mimeType,
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (error) throw error;
+
+            if (data) {
+                const { data: urlData } = supabase.storage
+                    .from("public-images")
+                    .getPublicUrl(fileName);
+                result[localPath] = urlData.publicUrl;
+            }
+        } catch (e) {
+            console.error(`Failed to sync image: ${localPath}`, e);
+        }
+    }
+    return result;
 }

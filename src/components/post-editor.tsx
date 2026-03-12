@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { TableOfContents } from "@/components/table-of-contents";
 import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save, Grid } from "lucide-react";
 import Image from "next/image";
+import { syncLocalImages } from "@/lib/actions/post";
 import type { ActionResult } from "@/lib/types";
 
 interface PostEditorProps {
@@ -39,6 +42,13 @@ export function PostEditor({
   const [isPending, setIsPending] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ originalPath: string; status: 'pending' | 'uploading' | 'done', newUrl?: string }[]>([]);
+  const [isAutoSyncing, setIsAutoSyncing] = useState(false);
+  const [localBaseDir, setLocalBaseDir] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("local-notes-root") || "";
+    }
+    return "";
+  });
 
   const draftKey = `draft-${initialData?.id || "new"}`;
 
@@ -53,14 +63,20 @@ export function PostEditor({
   }, [draftKey]);
 
   const draft = getInitial();
-  const hasDraft = draft !== null && !initialData?.id; // 只对新建文章提示恢复
+  // 修复：不再限制 !initialData?.id，允许编辑现有文章时也能恢复未保存的草稿
+  const hasDraft = draft !== null;
 
   const [title, setTitle] = useState(
     hasDraft ? draft.title : (initialData?.title || "")
   );
-  const [content, setContent] = useState(
+  const [localContent, setLocalContent] = useState(
     hasDraft ? draft.content : (initialData?.content || "")
   );
+  // 防抖后的内容，用于预览、自动保存和同步检测 (500ms 延迟)
+  const [debouncedContent] = useDebounce(localContent, 500);
+  // 目录专用防抖 (150ms)，实现实时目录预览
+  const [tocContent] = useDebounce(localContent, 150);
+
   const [excerpt, setExcerpt] = useState(
     hasDraft ? draft.excerpt : (initialData?.excerpt || "")
   );
@@ -76,9 +92,9 @@ export function PostEditor({
 
     saveTimer.current = setTimeout(() => {
       // 有内容才保存
-      if (title || content || excerpt || category) {
+      if (title || debouncedContent || excerpt || category) {
         try {
-          localStorage.setItem(draftKey, JSON.stringify({ title, content, excerpt, category }));
+          localStorage.setItem(draftKey, JSON.stringify({ title, content: debouncedContent, excerpt, category }));
           setAutoSaved(true);
           setTimeout(() => setAutoSaved(false), 2000);
         } catch (e) { }
@@ -88,7 +104,48 @@ export function PostEditor({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [title, content, excerpt, category, draftKey]);
+  }, [title, debouncedContent, excerpt, category, draftKey]);
+
+  // 改进 2 & 3: 内容同步与图片检测 (全面支持 ![]() 以及 <img src=""/>)
+  useEffect(() => {
+    // 匹配 Markdown 以及 HTML 图片路径
+    const allImageRegex = /!\[.*?\]\((.*?)\)|<img\s+[^>]*src=["'](.*?)["']/g;
+    const currentPathsInContent = Array.from(new Set([...debouncedContent.matchAll(allImageRegex)].map(m => m[1] || m[2]).filter(Boolean)));
+
+    // 区分本地路径和网络路径
+    const localPaths = currentPathsInContent.filter(p => !p.startsWith('http') && !p.startsWith('data:'));
+    const httpPaths = currentPathsInContent.filter(p => p.startsWith('http'));
+
+    setPendingImages(prev => {
+      const filtered = prev.filter(p => currentPathsInContent.includes(p.originalPath));
+      const existingPaths = filtered.map(p => p.originalPath);
+      
+      // 所有本地图片必须无条件进入同步面板
+      const newLocalPaths = localPaths.filter(path => !existingPaths.includes(path));
+      const addedLocal = newLocalPaths.map(path => ({ originalPath: path, status: 'pending' as const }));
+      
+      return [...filtered, ...addedLocal];
+    });
+
+    // 网络路径：异步探测是否 404，如果是则加入面板允许重传
+    httpPaths.forEach(url => {
+      const img = new window.Image();
+      img.onerror = () => {
+        setPendingImages(prev => {
+          if (prev.find(p => p.originalPath === url)) return prev;
+          return [...prev, { originalPath: url, status: 'pending' }];
+        });
+      };
+      img.src = url;
+    });
+  }, [debouncedContent]);
+
+  // 工具：保存基础路径到本地
+  useEffect(() => {
+    if (localBaseDir) {
+      localStorage.setItem("local-notes-root", localBaseDir);
+    }
+  }, [localBaseDir]);
 
   // 正文插图上传
   async function handleBodyImageUpload(
@@ -106,7 +163,7 @@ export function PostEditor({
         .from("public-images")
         .getPublicUrl(fileName);
       const imageMarkdown = `\n![描述](${data.publicUrl})\n`;
-      setContent((prev: string) => prev + imageMarkdown);
+      setLocalContent((prev: string) => prev + imageMarkdown);
     } catch (err: any) {
       alert("上传失败: " + err.message);
     } finally {
@@ -127,14 +184,44 @@ export function PostEditor({
     const reader = new FileReader();
     reader.onload = async (event) => {
       const text = event.target?.result as string;
-      setContent(text);
+      setLocalContent(text);
 
       // 检查是否有本地图片引用 (非 http/https/data 开头的图片链接)
-      const localImageRegex = /!\[.*?\]\((?!http|https|data:)(.*?)\)/g;
+      const localImageRegex = /!\[.*?\]\((?!http|https|data:)(.*?)\)|<img\s+[^>]*src=["'](?!http|https|data:)(.*?)["']/g;
       const matches = [...text.matchAll(localImageRegex)];
+
       if (matches.length > 0) {
-        const uniquePaths = Array.from(new Set(matches.map(m => m[1])));
+        const uniquePaths = Array.from(new Set(matches.map(m => m[1] || m[2]).filter(Boolean)));
+
+        // 初始化待处理状态
         setPendingImages(uniquePaths.map(path => ({ originalPath: path, status: 'pending' as const })));
+
+        // 核心：尝试自动同步本地图片 (因为是本地开发环境，Server Action 可以读取绝对路径)
+        try {
+          setIsAutoSyncing(true);
+          const syncedMapping = await syncLocalImages(uniquePaths, localBaseDir);
+          const syncedPaths = Object.keys(syncedMapping);
+
+          if (syncedPaths.length > 0) {
+            let updatedContent = text;
+            syncedPaths.forEach(oldPath => {
+              const newUrl = syncedMapping[oldPath];
+              updatedContent = updatedContent.split(`](${oldPath})`).join(`](${newUrl})`);
+            });
+
+            setLocalContent(updatedContent);
+
+            setPendingImages(prev => prev.map(p =>
+              syncedMapping[p.originalPath]
+                ? { ...p, status: 'done', newUrl: syncedMapping[p.originalPath] }
+                : p
+            ));
+          }
+        } catch (err) {
+          console.error("Auto-sync failed:", err);
+        } finally {
+          setIsAutoSyncing(false);
+        }
       } else {
         setPendingImages([]);
       }
@@ -161,7 +248,7 @@ export function PostEditor({
         .getPublicUrl(fileName);
 
       // 精确替换对应的本地路径为 Supabase URL
-      setContent((prev: string) => prev.split(`](${originalPath})`).join(`](${data.publicUrl})`));
+      setLocalContent((prev: string) => prev.split(`](${originalPath})`).join(`](${data.publicUrl})`));
 
       setPendingImages(prev => prev.map(p => p.originalPath === originalPath ? { ...p, status: 'done', newUrl: data.publicUrl } : p));
     } catch (err: any) {
@@ -178,7 +265,7 @@ export function PostEditor({
     setIsPending(true);
     try {
       const formData = new FormData(e.currentTarget);
-      formData.set("content", content);
+      formData.set("content", localContent);
 
       const result = await action(formData);
       if (result.success) {
@@ -199,7 +286,7 @@ export function PostEditor({
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
+    <div className="max-w-6xl mx-auto py-10 px-4">
       {/* 顶部标题栏 */}
       <div className="flex items-center gap-4 mb-8">
         <Button
@@ -220,7 +307,8 @@ export function PostEditor({
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
+        <div className="space-y-6 min-w-0">
         {initialData?.id && (
           <input type="hidden" name="id" value={initialData.id} />
         )}
@@ -366,14 +454,19 @@ export function PostEditor({
           {/* 本地图片快速上传处理面板 */}
           {pendingImages.length > 0 && !isPreview && (
             <div className="p-4 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/30 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 transition-colors">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-1">
                 <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-500 flex items-center gap-2">
-                  <ImageIcon size={16} /> 发现 MD 包含本地图片引用，请上传对应的图片以替换：
+                  <ImageIcon size={16} /> 发现 MD 包含本地/缺失的网络图片引用，请同步修复：
                 </h4>
-                {pendingImages.every(p => p.status === 'done') && (
-                  <Button variant="ghost" size="sm" onClick={() => setPendingImages([])} className="h-6 text-xs text-muted-foreground hover:text-foreground">隐藏完成项</Button>
+                {isAutoSyncing && (
+                  <div className="flex items-center gap-2 text-xs text-yellow-600 animate-pulse font-bold">
+                    <Loader2 size={12} className="animate-spin" /> 正在自动尝试同步本地文件...
+                  </div>
                 )}
               </div>
+              {pendingImages.every(p => p.status === 'done') && !isAutoSyncing && (
+                <Button variant="ghost" size="sm" onClick={() => setPendingImages([])} className="h-6 text-xs text-muted-foreground hover:text-foreground">隐藏完成项</Button>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
                 {pendingImages.map((img, idx) => (
                   <div key={idx} className="flex items-center justify-between gap-3 text-sm bg-background p-2.5 rounded-lg border border-border shadow-sm">
@@ -393,18 +486,61 @@ export function PostEditor({
                   </div>
                 ))}
               </div>
+
+              {/* 相对路径设置区 */}
+              <div className="pt-2 border-t border-yellow-500/20">
+                <p className="text-[11px] text-yellow-700/70 mb-2 leading-relaxed">
+                  提示：如果图片是相对路径 (如 markdown-img/xxx.png)，请在下方填写这些笔记在您电脑上的<b>根目录</b>：
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="例如: C:\Users\ASUS\Documents\Notes"
+                    value={localBaseDir}
+                    onChange={(e) => setLocalBaseDir(e.target.value)}
+                    className="h-8 text-xs bg-background/50 border-yellow-500/30 focus-visible:ring-yellow-500/30"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-700"
+                    onClick={async () => {
+                      const uniquePaths = pendingImages.filter(p => p.status !== 'done').map(p => p.originalPath);
+                      if (uniquePaths.length > 0) {
+                        try {
+                          setIsAutoSyncing(true);
+                          const syncedMapping = await syncLocalImages(uniquePaths, localBaseDir);
+                          // 应用同步结果... (逻辑同上)
+                          let updatedContent = localContent;
+                          let hasChange = false;
+                          Object.keys(syncedMapping).forEach(oldPath => {
+                            const newUrl = syncedMapping[oldPath];
+                            updatedContent = updatedContent.split(`](${oldPath})`).join(`](${newUrl})`);
+                            hasChange = true;
+                          });
+                          if (hasChange) setLocalContent(updatedContent);
+                        } finally {
+                          setIsAutoSyncing(false);
+                        }
+                      }
+                    }}
+                  >
+                    立即重试同步
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 
           {isPreview ? (
             <div className="p-6 bg-card border border-border rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">
-              <MarkdownRenderer content={content} />
+              <MarkdownRenderer content={localContent} />
             </div>
           ) : (
             <Textarea
               name="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+              value={localContent}
+              onChange={(e) => setLocalContent(e.target.value)}
               placeholder="# 开始创作吧..."
               className="min-h-125 font-mono leading-relaxed bg-card border-border focus-visible:ring-ring"
               required
@@ -428,6 +564,14 @@ export function PostEditor({
               "发布文章"
             )}
           </Button>
+          </div>
+        </div>
+
+        {/* 右侧目录栏 - 仅在大屏幕显示，并支持吸顶 */}
+        <div className="hidden lg:block sticky top-24 self-start">
+          <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 mt-24">
+             <TableOfContents content={debouncedContent} />
+          </div>
         </div>
       </form>
     </div>

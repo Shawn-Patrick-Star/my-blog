@@ -9,13 +9,55 @@ interface TocItem {
     level: number;
 }
 
-export function TableOfContents() {
+interface TableOfContentsProps {
+    content?: string; // 可选的原始内容，用于编辑器模式
+}
+
+export function TableOfContents({ content }: TableOfContentsProps) {
     const [headings, setHeadings] = useState<TocItem[]>([]);
     const [activeId, setActiveId] = useState<string>("");
     const navRef = useRef<HTMLUListElement>(null);
     const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
     useEffect(() => {
+        // 如果提供了 content，则手动解析（适用于编辑器预览或无 DOM 环境）
+        if (content) {
+            const lines = content.split('\n');
+            const elements: TocItem[] = [];
+            const counts = new Map<string, number>();
+
+            const slugify = (text: string) => {
+                let base = text.toLowerCase()
+                    .trim()
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/[^\w\-\u4e00-\u9fa5]/g, '') // 增加对中文字符的支持
+                    .replace(/^-+|-+$/g, '');
+
+                if (!base) base = 'heading';
+
+                const count = counts.get(base) || 0;
+                counts.set(base, count + 1);
+
+                return count === 0 ? base : `${base}-${count}`;
+            };
+
+            lines.forEach((line) => {
+                const match = line.match(/^(#{1,3})\s+(.+)$/);
+                if (match) {
+                    const level = match[1].length;
+                    const text = match[2].trim();
+                    elements.push({
+                        id: slugify(text), // 模拟 rehype-slug 的行为
+                        text,
+                        level,
+                    });
+                }
+            });
+            setHeadings(elements);
+            return;
+        }
+
+        // 默认逻辑：从 DOM 中解析
         const timer = setTimeout(() => {
             const elements = Array.from(document.querySelectorAll("h1, h2, h3"))
                 .filter((element) => element.id)
@@ -28,7 +70,7 @@ export function TableOfContents() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [content]);
 
     // 当 activeId 变化时，将对应条目滚动到目录中间
     useEffect(() => {
@@ -71,7 +113,17 @@ export function TableOfContents() {
     }, [headings]);
 
     if (headings.length === 0) {
-        return null;
+        return (
+            <nav className="sticky top-24 opacity-60">
+                <h4 className="text-sm font-semibold mb-4 text-foreground/80 uppercase tracking-wider text-center">
+                    contents
+                </h4>
+                <hr className="border-t border-border mb-4" />
+                <div className="text-center text-xs text-muted-foreground mt-10">
+                    暂无目录
+                </div>
+            </nav>
+        );
     }
 
     return (

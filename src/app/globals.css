@@ -127,7 +127,8 @@ body {
 
 /* ── 全局滚动条美化 ── */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -135,23 +136,28 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: hsl(var(--muted-foreground) / 0.4);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.7);
   border-radius: 99px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+.dark ::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 99px;
+  border: 3px solid transparent;
   background-clip: content-box;
 }
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-}
-
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #71717a;
+  border: 2px solid transparent;
 }
 
 /* ── 选中文字高亮色 ── */
@@ -164,3 +170,53 @@ body {
   background-color: hsl(var(--primary) / 0.3);
   color: white;
 }
+
+/* ── 代码高亮双主题支持 (Highlight.js) ── */
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0;
+  color: #24292e;
+  background: transparent;
+}
+
+/* 语法配色 - 白天模式 (GitHub Light 风格) */
+:root {
+  --hljs-comment: #6a737d;
+  --hljs-keyword: #d73a49;
+  --hljs-string: #032f62;
+  --hljs-title: #6f42c1;
+  --hljs-section: #005cc5;
+  --hljs-variable: #e36209;
+  --hljs-type: #d73a49;
+  --hljs-number: #005cc5;
+}
+
+/* 语法配色 - 暗夜模式 (GitHub Dark 风格) */
+.dark {
+  --hljs-comment: #8b949e;
+  --hljs-keyword: #ff7b72;
+  --hljs-string: #a5d6ff;
+  --hljs-title: #d2a8ff;
+  --hljs-section: #79c0ff;
+  --hljs-variable: #ffa657;
+  --hljs-type: #ff7b72;
+  --hljs-number: #79c0ff;
+}
+
+.dark .hljs {
+  color: #c9d1d9;
+}
+
+/* 映射 highlight.js 类名 */
+.hljs-comment, .hljs-quote { color: var(--hljs-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-type { color: var(--hljs-keyword); }
+.hljs-string, .hljs-bullet, .hljs-subst { color: var(--hljs-string); }
+.hljs-title, .hljs-section, .hljs-attribute { color: var(--hljs-title); }
+.hljs-variable, .hljs-template-variable { color: var(--hljs-variable); }
+.hljs-number, .hljs-literal, .hljs-symbol { color: var(--hljs-number); }
+.hljs-addition { color: #22863a; background-color: #f0fff4; }
+.hljs-deletion { color: #b31d28; background-color: #ffeef0; }
+.hljs-strong { font-weight: 700; }
+.hljs-emphasis { font-style: italic; }
+
