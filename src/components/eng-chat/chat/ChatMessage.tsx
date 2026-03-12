@@ -53,7 +53,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 : 'bg-card border border-border text-foreground rounded-bl-sm shadow-sm'
             }`}
           >
-            <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            {(!isUser && !message.content) ? (
+              <div className="flex items-center gap-1 py-1">
+                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            )}
             
             {/* Speaker Analysis Button (🔍) */}
             {!isUser && message.content && (

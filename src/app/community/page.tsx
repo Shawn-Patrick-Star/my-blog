@@ -92,7 +92,7 @@ export default async function CommunityPage({
                             )}
 
                             {isUser && (
-                                <Link href="/admin/moments">
+                                <Link href="/moments/new">
                                     <Button
                                         variant="outline"
                                         size="sm"

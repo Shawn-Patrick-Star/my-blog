@@ -59,7 +59,7 @@ export default async function AdminDashboard() {
           </Card>
         </Link>
 
-        <Link href="/admin/moments">
+        <Link href="/moments/new">
           <Card className="hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer h-full border-border bg-card rounded-[32px] overflow-hidden group">
             <CardHeader>
               <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
