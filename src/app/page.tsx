@@ -38,7 +38,7 @@ export default async function Home({
       .limit(5)
   ]);
 
-  const isAdmin = userWithProfile?.profile.role === "admin" || userWithProfile?.profile.role === "super_admin";
+  const isAdmin = userWithProfile?.profile?.role === "admin" || userWithProfile?.profile?.role === "super_admin";
 
   // 2. 解析配置项
   const heroImage = configs?.find((c: any) => c.key === "hero_image")?.value || "";

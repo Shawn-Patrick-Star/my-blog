@@ -23,20 +23,25 @@ export default async function BlogPost({
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: post } = await supabase
-    .from("posts")
-    .select("*, author:profiles!author_id(*)")
-    .eq("slug", slug)
-    .single();
+  // 并行获取数据
+  const [postRes, isAdmin] = await Promise.all([
+    supabase
+      .from("posts")
+      .select("*, author:profiles!author_id(*)")
+      .eq("slug", slug)
+      .single(),
+    checkIsAdmin()
+  ]);
+
+  const post = postRes.data;
   if (!post) notFound();
 
+  // 评论加载可以根据需要是否并行，通常并行更好
   const { data: comments } = await supabase
     .from("comments")
     .select("*, author:profiles!author_id(avatar_url, username)")
     .eq("post_id", post.id)
     .order("created_at", { ascending: true });
-
-  const isAdmin = await checkIsAdmin();
 
   const hasCover = !!post.cover_image;
 

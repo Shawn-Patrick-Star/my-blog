@@ -78,13 +78,15 @@ export function MarkdownRenderer({
     h1: ({ ...props }) => <h1 className="text-3xl font-black mt-10 mb-6 text-foreground tracking-tight scroll-m-20 border-b border-border/50 pb-3" {...props} />,
     h2: ({ ...props }) => <h2 className="text-2xl font-bold mt-8 mb-4 text-foreground/90 tracking-tight scroll-m-20" {...props} />,
     h3: ({ ...props }) => <h3 className="text-xl font-bold mt-6 mb-3 text-foreground/80 tracking-tight scroll-m-20" {...props} />,
-    
+    h4: ({ ...props }) => <h4 className="text-lg font-bold mt-6 mb-3 text-foreground/80 tracking-tight scroll-m-20" {...props} />,
     // 基础文本
-    p: ({ ...props }) => <p className="leading-8 mb-6 text-foreground text-[16px] wrap-break-word" {...props} />,
-    
+    p: ({ ...props }) => <p className="leading-8 mb-2 text-foreground text-[16px] wrap-break-word" {...props} />,
+    // 加粗
+    strong: ({ ...props }) => <strong className="font-bold text-foreground" {...props} />,
+    b: ({ ...props }) => <strong className="font-bold text-foreground" {...props} />,
     // 列表与任务列表
-    ul: ({ ...props }) => <ul className="list-disc pl-6 mb-6 space-y-2 text-foreground" {...props} />,
-    ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-6 space-y-2 text-foreground" {...props} />,
+    ul: ({ ...props }) => <ul className="list-disc pl-6 mb-2 space-y-2 text-foreground" {...props} />,
+    ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-2 space-y-2 text-foreground" {...props} />,
     li: ({ children, ...props }: any) => {
       // 检查是否是任务列表项
       const isTask = Array.isArray(children) && children.some(c => c?.props?.type === 'checkbox');
@@ -129,18 +131,18 @@ export function MarkdownRenderer({
     // 代码块
     code: CodeBlock,
 
-    // 表格美化
+    // 表格美化：简洁清晰的实线风格
     table: ({ ...props }) => (
-      <div className="my-8 w-full overflow-hidden rounded-2xl border border-border/50 shadow-sm">
-        <div className="overflow-x-auto custom-scrollbar">
+      <div className="my-4 w-full">
+
           <table className="w-full text-sm border-collapse" {...props} />
-        </div>
+
       </div>
     ),
-    thead: ({ ...props }) => <thead className="bg-muted/50 border-b border-border/60" {...props} />,
-    th: ({ ...props }) => <th className="px-5 py-3 text-left font-black text-foreground/80 whitespace-nowrap" {...props} />,
-    td: ({ ...props }) => <td className="px-5 py-3 border-b border-border/30 text-foreground" {...props} />,
-    tr: ({ ...props }) => <tr className="hover:bg-muted/20 transition-colors last:border-b-0" {...props} />,
+    thead: ({ ...props }) => <thead className="bg-muted/80 border-b border-border" {...props} />,
+    th: ({ ...props }) => <th className="px-4 py-2 text-left font-bold text-foreground border border-border whitespace-nowrap bg-muted/30" {...props} />,
+    td: ({ ...props }) => <td className="px-4 py-2 border border-border text-foreground" {...props} />,
+    tr: ({ ...props }) => <tr className="hover:bg-muted/30" {...props} />,
 
     // 公式块限制
     span: ({ className, ...props }: any) => {
@@ -164,14 +166,16 @@ export function MarkdownRenderer({
           <img
             src={src}
             alt={alt || "image"}
+            loading="lazy"
+            decoding="async"
             className="rounded-[24px] border border-border shadow-md mx-auto max-h-[600px] object-contain hover:scale-[1.01] transition-transform duration-500"
             {...props}
           />
           {alt && (
             <span className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 font-medium italic">
-              <span className="w-8 h-[1px] bg-border" />
+              <span className="w-8 h-px bg-border" />
               {alt}
-              <span className="w-8 h-[1px] bg-border" />
+              <span className="w-8 h-px bg-border" />
             </span>
           )}
         </span>
@@ -179,8 +183,10 @@ export function MarkdownRenderer({
     },
   };
 
-  // 预处理：支持 ==荧光高亮== 语法 (转换为 HTML <mark> 标签)
-  const processedContent = content.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+  // 预处理：支持 ==荧光高亮== 语法 (使用 useMemo 缓存以优化长文本性能)
+  const processedContent = React.useMemo(() => {
+    return content.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+  }, [content]);
 
   return (
     <div className={cn("prose prose-zinc dark:prose-invert max-w-none transition-all duration-500", className)}>

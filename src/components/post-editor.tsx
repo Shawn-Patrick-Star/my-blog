@@ -10,10 +10,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { TableOfContents } from "@/components/table-of-contents";
-import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save, Grid } from "lucide-react";
+import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save, Grid, FolderOpen } from "lucide-react";
 import Image from "next/image";
 import { syncLocalImages } from "@/lib/actions/post";
 import type { ActionResult } from "@/lib/types";
+
+// 辅助函数：替换内容中的图片路径 (支持 Markdown 和 HTML 标签)
+const replaceImagePath = (content: string, oldPath: string, newUrl: string) => {
+  const escapedPath = oldPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const mdRegex = new RegExp(`(!\\[.*?\\]\\()${escapedPath}(\\))`, 'g');
+  const htmlRegex = new RegExp(`(<img\\s+[^>]*src=["'])${escapedPath}(["'])`, 'g');
+  return content.replace(mdRegex, `$1${newUrl}$2`).replace(htmlRegex, `$1${newUrl}$2`);
+};
 
 interface PostEditorProps {
   initialData?: {
@@ -43,6 +51,7 @@ export function PostEditor({
   const [autoSaved, setAutoSaved] = useState(false);
   const [pendingImages, setPendingImages] = useState<{ originalPath: string; status: 'pending' | 'uploading' | 'done', newUrl?: string }[]>([]);
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
+  const [dirHandle, setDirHandle] = useState<FileSystemDirectoryHandle | null>(null);
   const [localBaseDir, setLocalBaseDir] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("local-notes-root") || "";
@@ -206,7 +215,7 @@ export function PostEditor({
             let updatedContent = text;
             syncedPaths.forEach(oldPath => {
               const newUrl = syncedMapping[oldPath];
-              updatedContent = updatedContent.split(`](${oldPath})`).join(`](${newUrl})`);
+              updatedContent = replaceImagePath(updatedContent, oldPath, newUrl);
             });
 
             setLocalContent(updatedContent);
@@ -247,8 +256,8 @@ export function PostEditor({
         .from("public-images")
         .getPublicUrl(fileName);
 
-      // 精确替换对应的本地路径为 Supabase URL
-      setLocalContent((prev: string) => prev.split(`](${originalPath})`).join(`](${data.publicUrl})`));
+      // 精确替换对应的本地路径为 Supabase URL (支持 MD 和 HTML)
+      setLocalContent((prev: string) => replaceImagePath(prev, originalPath, data.publicUrl));
 
       setPendingImages(prev => prev.map(p => p.originalPath === originalPath ? { ...p, status: 'done', newUrl: data.publicUrl } : p));
     } catch (err: any) {
@@ -256,6 +265,97 @@ export function PostEditor({
       setPendingImages(prev => prev.map(p => p.originalPath === originalPath ? { ...p, status: 'pending' } : p));
     } finally {
       e.target.value = "";
+    }
+  }
+
+  // 核心功能：基于浏览器句柄自动寻找并上传文件
+  async function syncImagesWithHandle(handle: FileSystemDirectoryHandle, targets: typeof pendingImages) {
+    if (isAutoSyncing) return;
+    setIsAutoSyncing(true);
+
+    try {
+      let currentContent = localContent;
+      let hasUpdate = false;
+
+      // 递归寻找文件的辅助函数
+      async function findFileRecursive(dir: FileSystemDirectoryHandle, targetPath: string): Promise<File | null> {
+        // 简单处理：提取文件名。更精确的做法是按路径层级查找。
+        const parts = targetPath.split(/[/\\]/);
+        const fileName = parts[parts.length - 1];
+        
+        // 尝试按原路径查找 (支持相对路径映射)
+        try {
+          let currentDir = dir;
+          for (let i = 0; i < parts.length - 1; i++) {
+            if (!parts[i] || parts[i] === '.') continue;
+            currentDir = await currentDir.getDirectoryHandle(parts[i]);
+          }
+          const fileHandle = await currentDir.getFileHandle(fileName);
+          return await fileHandle.getFile();
+        } catch (e) {
+          // 如果按路径找不着，尝试全局递归搜索文件名
+          // @ts-ignore - 部分 TS 版本对 FileSystemDirectoryHandle 的异步迭代器定义不全
+          for await (const entry of dir.values()) {
+            if (entry.kind === 'file' && entry.name === fileName) {
+              return await (entry as FileSystemFileHandle).getFile();
+            }
+            if (entry.kind === 'directory') {
+              const res = await findFileRecursive(entry as FileSystemDirectoryHandle, targetPath);
+              if (res) return res;
+            }
+          }
+        }
+        return null;
+      }
+
+      for (const img of targets) {
+        if (img.status === 'done') continue;
+        
+        const file = await findFileRecursive(handle, img.originalPath);
+        if (file) {
+          // 设置上传状态
+          setPendingImages(prev => prev.map(p => p.originalPath === img.originalPath ? { ...p, status: 'uploading' } : p));
+          
+          const fileName = `sync-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
+          const { error } = await supabase.storage.from("public-images").upload(fileName, file);
+          
+          if (!error) {
+            const { data } = supabase.storage.from("public-images").getPublicUrl(fileName);
+            // 替换内容
+            currentContent = replaceImagePath(currentContent, img.originalPath, data.publicUrl);
+            hasUpdate = true;
+            
+            setPendingImages(prev => prev.map(p => p.originalPath === img.originalPath ? { ...p, status: 'done', newUrl: data.publicUrl } : p));
+          } else {
+            setPendingImages(prev => prev.map(p => p.originalPath === img.originalPath ? { ...p, status: 'pending' } : p));
+          }
+        }
+      }
+
+      if (hasUpdate) {
+        setLocalContent(currentContent);
+      }
+    } catch (err) {
+      console.error("Directory sync failed:", err);
+    } finally {
+      setIsAutoSyncing(false);
+    }
+  }
+
+  // 弹出文件夹选择器
+  async function handleChooseFolder() {
+    try {
+      // @ts-ignore
+      const handle = await window.showDirectoryPicker();
+      setDirHandle(handle);
+      setLocalBaseDir(handle.name); // 仅作显示用
+      
+      const toSync = pendingImages.filter(p => p.status !== 'done');
+      if (toSync.length > 0) {
+        await syncImagesWithHandle(handle, toSync);
+      }
+    } catch (e) {
+      console.warn("Folder selection cancelled or not supported", e);
     }
   }
 
@@ -493,29 +593,44 @@ export function PostEditor({
                   提示：如果图片是相对路径 (如 markdown-img/xxx.png)，请在下方填写这些笔记在您电脑上的<b>根目录</b>：
                 </p>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="例如: C:\Users\ASUS\Documents\Notes"
-                    value={localBaseDir}
-                    onChange={(e) => setLocalBaseDir(e.target.value)}
-                    className="h-8 text-xs bg-background/50 border-yellow-500/30 focus-visible:ring-yellow-500/30"
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="例如: C:\Users\ASUS\Documents\Notes"
+                      value={localBaseDir}
+                      onChange={(e) => setLocalBaseDir(e.target.value)}
+                      className="h-8 text-xs bg-background/50 border-yellow-500/30 focus-visible:ring-yellow-500/30 pr-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleChooseFolder}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-600 hover:text-yellow-500"
+                      title="扫描笔记文件夹"
+                    >
+                      <FolderOpen size={14} />
+                    </button>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="h-8 text-xs border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-700"
                     onClick={async () => {
+                      // 优先使用句柄同步，如果没有句柄则回退到 Server Action 路径同步
+                      if (dirHandle) {
+                        await syncImagesWithHandle(dirHandle, pendingImages.filter(p => p.status !== 'done'));
+                        return;
+                      }
+
                       const uniquePaths = pendingImages.filter(p => p.status !== 'done').map(p => p.originalPath);
                       if (uniquePaths.length > 0) {
                         try {
                           setIsAutoSyncing(true);
                           const syncedMapping = await syncLocalImages(uniquePaths, localBaseDir);
-                          // 应用同步结果... (逻辑同上)
                           let updatedContent = localContent;
                           let hasChange = false;
                           Object.keys(syncedMapping).forEach(oldPath => {
                             const newUrl = syncedMapping[oldPath];
-                            updatedContent = updatedContent.split(`](${oldPath})`).join(`](${newUrl})`);
+                            updatedContent = replaceImagePath(updatedContent, oldPath, newUrl);
                             hasChange = true;
                           });
                           if (hasChange) setLocalContent(updatedContent);
@@ -525,7 +640,8 @@ export function PostEditor({
                       }
                     }}
                   >
-                    立即重试同步
+                    {isAutoSyncing ? <Loader2 size={12} className="animate-spin mr-1" /> : null}
+                    立即开始全自动同步
                   </Button>
                 </div>
               </div>
