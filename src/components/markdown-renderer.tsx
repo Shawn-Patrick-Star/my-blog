@@ -192,7 +192,7 @@ export function MarkdownRenderer({
     <div className={cn("prose prose-zinc dark:prose-invert max-w-none transition-all duration-500", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeHighlight, rehypeKatex, rehypeSlug, rehypeRaw]}
+        rehypePlugins={[rehypeHighlight, [rehypeKatex, { strict: false }], rehypeSlug, rehypeRaw]}
         components={markdownComponents}
       >
         {processedContent}

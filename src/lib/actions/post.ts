@@ -67,6 +67,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
     const category = formData.get("category") as string;
     const coverFile = formData.get("cover") as File;
     const slug = formData.get("slug") as string;
+    const removeCover = formData.get("remove_cover") === "true";
 
     // 1. 获取旧数据用于图片对比
     const { data: oldPost } = await supabase
@@ -75,7 +76,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
         .eq("id", id)
         .single();
 
-    let coverImageUrl: string | undefined;
+    let coverImageUrl: string | undefined | null;
     if (coverFile && coverFile.size > 0) {
         // 如果有新封面，先上传新封面
         coverImageUrl = await uploadImage(coverFile, "cover");
@@ -83,6 +84,10 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
         if (oldPost?.cover_image) {
             await deleteImageFromUrl(oldPost.cover_image, supabase);
         }
+    } else if (removeCover && oldPost?.cover_image) {
+        // 请求删除封面且没有上传新图
+        await deleteImageFromUrl(oldPost.cover_image, supabase);
+        coverImageUrl = null;
     }
 
     // 2. 正文图片对比清理
@@ -109,7 +114,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
         updated_at: new Date().toISOString(),
     };
 
-    if (coverImageUrl) {
+    if (coverImageUrl !== undefined) {
         updateData.cover_image = coverImageUrl;
     }
 

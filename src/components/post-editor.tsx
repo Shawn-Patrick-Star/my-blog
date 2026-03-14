@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { TableOfContents } from "@/components/table-of-contents";
-import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save, Grid, FolderOpen } from "lucide-react";
+import { ImageIcon, Tag, FileText, Heading, Eye, Edit3, Upload, Loader2, ArrowLeft, Save, Grid, FolderOpen, X } from "lucide-react";
 import Image from "next/image";
 import { syncLocalImages } from "@/lib/actions/post";
 import type { ActionResult } from "@/lib/types";
@@ -58,6 +58,27 @@ export function PostEditor({
     }
     return "";
   });
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(initialData?.cover_image || null);
+  const [removeCover, setRemoveCover] = useState(false);
+
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverPreview(URL.createObjectURL(file));
+      setRemoveCover(false);
+    }
+  };
+
+  const clearCover = () => {
+    setCoverPreview(null);
+    setRemoveCover(true);
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
+  };
+
 
   const draftKey = `draft-${initialData?.id || "new"}`;
 
@@ -128,11 +149,11 @@ export function PostEditor({
     setPendingImages(prev => {
       const filtered = prev.filter(p => currentPathsInContent.includes(p.originalPath));
       const existingPaths = filtered.map(p => p.originalPath);
-      
+
       // 所有本地图片必须无条件进入同步面板
       const newLocalPaths = localPaths.filter(path => !existingPaths.includes(path));
       const addedLocal = newLocalPaths.map(path => ({ originalPath: path, status: 'pending' as const }));
-      
+
       return [...filtered, ...addedLocal];
     });
 
@@ -282,7 +303,7 @@ export function PostEditor({
         // 简单处理：提取文件名。更精确的做法是按路径层级查找。
         const parts = targetPath.split(/[/\\]/);
         const fileName = parts[parts.length - 1];
-        
+
         // 尝试按原路径查找 (支持相对路径映射)
         try {
           let currentDir = dir;
@@ -310,21 +331,21 @@ export function PostEditor({
 
       for (const img of targets) {
         if (img.status === 'done') continue;
-        
+
         const file = await findFileRecursive(handle, img.originalPath);
         if (file) {
           // 设置上传状态
           setPendingImages(prev => prev.map(p => p.originalPath === img.originalPath ? { ...p, status: 'uploading' } : p));
-          
+
           const fileName = `sync-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
           const { error } = await supabase.storage.from("public-images").upload(fileName, file);
-          
+
           if (!error) {
             const { data } = supabase.storage.from("public-images").getPublicUrl(fileName);
             // 替换内容
             currentContent = replaceImagePath(currentContent, img.originalPath, data.publicUrl);
             hasUpdate = true;
-            
+
             setPendingImages(prev => prev.map(p => p.originalPath === img.originalPath ? { ...p, status: 'done', newUrl: data.publicUrl } : p));
           } else {
             setPendingImages(prev => prev.map(p => p.originalPath === img.originalPath ? { ...p, status: 'pending' } : p));
@@ -349,7 +370,7 @@ export function PostEditor({
       const handle = await window.showDirectoryPicker();
       setDirHandle(handle);
       setLocalBaseDir(handle.name); // 仅作显示用
-      
+
       const toSync = pendingImages.filter(p => p.status !== 'done');
       if (toSync.length > 0) {
         await syncImagesWithHandle(handle, toSync);
@@ -407,286 +428,306 @@ export function PostEditor({
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-6 min-w-0">
-        {initialData?.id && (
-          <input type="hidden" name="id" value={initialData.id} />
-        )}
-        {initialData?.slug && (
-          <input type="hidden" name="slug" value={initialData.slug} />
-        )}
+          {initialData?.id && (
+            <input type="hidden" name="id" value={initialData.id} />
+          )}
+          {initialData?.slug && (
+            <input type="hidden" name="slug" value={initialData.slug} />
+          )}
 
-        {/* 标题、摘要、标签、封面 —— 始终显示 */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Heading size={16} className="text-primary" /> 文章标题
-            </label>
-            <Input
-              name="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="在此输入标题..."
-              className="text-lg py-6 bg-card border-border focus-visible:ring-ring"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText size={16} className="text-primary" /> 摘要
-            </label>
-            <Input
-              name="excerpt"
-              value={excerpt}
-              onChange={(e) => setExcerpt(e.target.value)}
-              placeholder="简单介绍一下这篇文章..."
-              className="border-border focus-visible:ring-ring bg-card"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Grid size={16} className="text-primary" /> 分类
-            </label>
-            <Input
-              name="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="输入或选择分类..."
-              list="category-list"
-              className="border-border focus-visible:ring-ring bg-card"
-            />
-            <datalist id="category-list">
-              {categories.map((cat) => (
-                <option key={cat} value={cat} />
-              ))}
-            </datalist>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 标题、摘要、标签、封面 —— 始终显示 */}
+          <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Tag size={16} className="text-primary" /> 标签 (按回车添加)
+                <Heading size={16} className="text-primary" /> 文章标题
               </label>
-              <TagInput
-                name="tags"
-                defaultTags={initialData?.tags || []}
-                placeholder="输入标签后按回车..."
-                inputClassName="bg-card border-border focus-visible:ring-ring"
-                badgeClassName="bg-secondary text-secondary-foreground border-border/50 hover:bg-secondary/80"
+              <Input
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="在此输入标题..."
+                className="text-lg py-6 bg-card border-border focus-visible:ring-ring"
+                required
               />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <ImageIcon size={16} className="text-primary" /> 封面图片
+                <FileText size={16} className="text-primary" /> 摘要
               </label>
               <Input
-                name="cover"
-                type="file"
-                accept="image/*"
-                className="cursor-pointer border-border bg-card"
+                name="excerpt"
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                placeholder="简单介绍一下这篇文章..."
+                className="border-border focus-visible:ring-ring bg-card"
               />
-              {initialData?.cover_image && (
-                <div className="mt-2 relative w-32 h-20 rounded border border-border overflow-hidden opacity-40">
-                  <Image
-                    src={initialData.cover_image}
-                    alt="current"
-                    fill
-                    className="object-cover"
-                  />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Grid size={16} className="text-primary" /> 分类
+              </label>
+              <Input
+                name="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="输入或选择分类..."
+                list="category-list"
+                className="border-border focus-visible:ring-ring bg-card"
+              />
+              <datalist id="category-list">
+                {categories.map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Tag size={16} className="text-primary" /> 标签 (按回车添加)
+                </label>
+                <TagInput
+                  name="tags"
+                  defaultTags={initialData?.tags || []}
+                  placeholder="输入标签后按回车..."
+                  inputClassName="bg-card border-border focus-visible:ring-ring"
+                  badgeClassName="bg-secondary text-secondary-foreground border-border/50 hover:bg-secondary/80"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <ImageIcon size={16} className="text-primary" /> 封面图片
+                  </label>
+                  {coverPreview && (
+                    <button
+                      type="button"
+                      onClick={clearCover}
+                      className="flex items-center gap-1 text-xs text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-2 py-1 rounded-md transition-colors font-medium border border-red-500/20"
+                    >
+                      <X size={14} /> 删除封面
+                    </button>
+                  )}
                 </div>
-              )}
+                <Input
+                  name="cover"
+                  type="file"
+                  accept="image/*"
+                  ref={coverInputRef}
+                  onChange={handleCoverChange}
+                  className="cursor-pointer border-border bg-card"
+                />
+                {removeCover && <input type="hidden" name="remove_cover" value="true" />}
+                {coverPreview && (
+                  <div className="mt-2 relative w-32 h-20 rounded border border-border overflow-hidden">
+                    <Image
+                      src={coverPreview}
+                      alt="current cover"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 正文区域 —— 编辑 / 预览切换 */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText size={16} className="text-primary" /> 正文内容 (Markdown)
-            </label>
-            <div className="flex items-center gap-2">
-              {!isPreview && (
-                <>
-                  <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm">
-                    <FileText size={12} /> 导入 MD
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={handleMarkdownUpload}
-                      accept=".md"
-                    />
-                  </label>
-                  <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm mr-1">
-                    <Upload size={12} /> 插入图片
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={handleBodyImageUpload}
-                      accept="image/*"
-                    />
-                  </label>
-                </>
+        {/* 正文和目录包裹在一个 Grid 中 */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 items-start">
+          <div className="space-y-6 min-w-0">
+
+            {/* 正文区域 —— 编辑 / 预览切换 */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <FileText size={16} className="text-primary" /> 正文内容 (Markdown)
+                </label>
+                <div className="flex items-center gap-2">
+                  {!isPreview && (
+                    <>
+                      <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm">
+                        <FileText size={12} /> 导入 MD
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleMarkdownUpload}
+                          accept=".md"
+                        />
+                      </label>
+                      <label className="text-xs bg-card border border-border hover:bg-accent px-3 py-1.5 rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary shadow-sm mr-1">
+                        <Upload size={12} /> 插入图片
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleBodyImageUpload}
+                          accept="image/*"
+                        />
+                      </label>
+                    </>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs bg-card border border-border hover:bg-accent rounded-md cursor-pointer transition-colors flex items-center gap-1.5 text-primary hover:text-primary shadow-sm"
+                    onClick={() => setIsPreview(!isPreview)}
+                  >
+                    {isPreview ? (
+                      <>
+                        <Edit3 size={14} className="mr-1.5" /> 返回编辑
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={14} className="mr-1.5" /> 预览正文
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* 本地图片快速上传处理面板 */}
+              {pendingImages.length > 0 && !isPreview && (
+                <div className="p-4 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/30 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 transition-colors">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-500 flex items-center gap-2">
+                      <ImageIcon size={16} /> 发现 MD 包含本地/缺失的网络图片引用，请同步修复：
+                    </h4>
+                    {isAutoSyncing && (
+                      <div className="flex items-center gap-2 text-xs text-yellow-600 animate-pulse font-bold">
+                        <Loader2 size={12} className="animate-spin" /> 正在自动尝试同步本地文件...
+                      </div>
+                    )}
+                  </div>
+                  {pendingImages.every(p => p.status === 'done') && !isAutoSyncing && (
+                    <Button variant="ghost" size="sm" onClick={() => setPendingImages([])} className="h-6 text-xs text-muted-foreground hover:text-foreground">隐藏完成项</Button>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
+                    {pendingImages.map((img, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-3 text-sm bg-background p-2.5 rounded-lg border border-border shadow-sm">
+                        <code className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded max-w-[50%] truncate" title={img.originalPath}>{img.originalPath}</code>
+                        {img.status === 'done' ? (
+                          <span className="text-emerald-500 font-medium text-xs px-2.5 py-1 bg-emerald-500/10 rounded-md">替换完成 ✓</span>
+                        ) : img.status === 'uploading' ? (
+                          <span className="text-yellow-600 dark:text-yellow-500 font-medium animate-pulse text-xs px-2.5 py-1 bg-yellow-500/10 rounded-md flex items-center gap-1.5">
+                            <Loader2 size={12} className="animate-spin" /> 上传中...
+                          </span>
+                        ) : (
+                          <label className="bg-primary/10 hover:bg-primary/20 text-primary text-xs px-3 py-1 cursor-pointer rounded-md transition-colors font-medium border border-primary/20 hover:border-primary/40 shrink-0">
+                            选择并替换
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePendingImageUpload(e, img.originalPath)} />
+                          </label>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 相对路径设置区 */}
+                  <div className="pt-2 border-t border-yellow-500/20">
+                    <p className="text-[11px] text-yellow-700/70 mb-2 leading-relaxed">
+                      提示：如果图片是相对路径 (如 markdown-img/xxx.png)，请在下方填写这些笔记在您电脑上的<b>根目录</b>：
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          placeholder="例如: C:\Users\ASUS\Documents\Notes"
+                          value={localBaseDir}
+                          onChange={(e) => setLocalBaseDir(e.target.value)}
+                          className="h-8 text-xs bg-background/50 border-yellow-500/30 focus-visible:ring-yellow-500/30 pr-8"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleChooseFolder}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-600 hover:text-yellow-500"
+                          title="扫描笔记文件夹"
+                        >
+                          <FolderOpen size={14} />
+                        </button>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-700"
+                        onClick={async () => {
+                          // 优先使用句柄同步，如果没有句柄则回退到 Server Action 路径同步
+                          if (dirHandle) {
+                            await syncImagesWithHandle(dirHandle, pendingImages.filter(p => p.status !== 'done'));
+                            return;
+                          }
+
+                          const uniquePaths = pendingImages.filter(p => p.status !== 'done').map(p => p.originalPath);
+                          if (uniquePaths.length > 0) {
+                            try {
+                              setIsAutoSyncing(true);
+                              const syncedMapping = await syncLocalImages(uniquePaths, localBaseDir);
+                              let updatedContent = localContent;
+                              let hasChange = false;
+                              Object.keys(syncedMapping).forEach(oldPath => {
+                                const newUrl = syncedMapping[oldPath];
+                                updatedContent = replaceImagePath(updatedContent, oldPath, newUrl);
+                                hasChange = true;
+                              });
+                              if (hasChange) setLocalContent(updatedContent);
+                            } finally {
+                              setIsAutoSyncing(false);
+                            }
+                          }
+                        }}
+                      >
+                        {isAutoSyncing ? <Loader2 size={12} className="animate-spin mr-1" /> : null}
+                        立即开始全自动同步
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
+
+              {isPreview ? (
+                <div className="p-6 bg-card border border-border rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">
+                  <MarkdownRenderer content={localContent} />
+                </div>
+              ) : (
+                <Textarea
+                  name="content"
+                  value={localContent}
+                  onChange={(e) => setLocalContent(e.target.value)}
+                  placeholder="# 开始创作吧..."
+                  className="min-h-125 font-mono leading-relaxed bg-card border-border focus-visible:ring-ring"
+                  required
+                />
+              )}
+            </div>
+
+            <div className="flex gap-4 pt-6 border-t border-border">
               <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-primary border-border bg-accent/30 hover:bg-accent"
-                onClick={() => setIsPreview(!isPreview)}
+                type="submit"
+                disabled={isPending || isPreview}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 shadow-lg shadow-primary/20"
               >
-                {isPreview ? (
+                {isPending ? (
                   <>
-                    <Edit3 size={14} className="mr-1.5" /> 返回编辑
+                    <Loader2 className="animate-spin mr-2" /> 处理中...
                   </>
+                ) : initialData ? (
+                  "保存修改"
                 ) : (
-                  <>
-                    <Eye size={14} className="mr-1.5" /> 预览正文
-                  </>
+                  "发布文章"
                 )}
               </Button>
             </div>
           </div>
 
-          {/* 本地图片快速上传处理面板 */}
-          {pendingImages.length > 0 && !isPreview && (
-            <div className="p-4 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/30 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 transition-colors">
-              <div className="flex flex-col gap-1">
-                <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-500 flex items-center gap-2">
-                  <ImageIcon size={16} /> 发现 MD 包含本地/缺失的网络图片引用，请同步修复：
-                </h4>
-                {isAutoSyncing && (
-                  <div className="flex items-center gap-2 text-xs text-yellow-600 animate-pulse font-bold">
-                    <Loader2 size={12} className="animate-spin" /> 正在自动尝试同步本地文件...
-                  </div>
-                )}
-              </div>
-              {pendingImages.every(p => p.status === 'done') && !isAutoSyncing && (
-                <Button variant="ghost" size="sm" onClick={() => setPendingImages([])} className="h-6 text-xs text-muted-foreground hover:text-foreground">隐藏完成项</Button>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
-                {pendingImages.map((img, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 text-sm bg-background p-2.5 rounded-lg border border-border shadow-sm">
-                    <code className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded max-w-[50%] truncate" title={img.originalPath}>{img.originalPath}</code>
-                    {img.status === 'done' ? (
-                      <span className="text-emerald-500 font-medium text-xs px-2.5 py-1 bg-emerald-500/10 rounded-md">替换完成 ✓</span>
-                    ) : img.status === 'uploading' ? (
-                      <span className="text-yellow-600 dark:text-yellow-500 font-medium animate-pulse text-xs px-2.5 py-1 bg-yellow-500/10 rounded-md flex items-center gap-1.5">
-                        <Loader2 size={12} className="animate-spin" /> 上传中...
-                      </span>
-                    ) : (
-                      <label className="bg-primary/10 hover:bg-primary/20 text-primary text-xs px-3 py-1 cursor-pointer rounded-md transition-colors font-medium border border-primary/20 hover:border-primary/40 shrink-0">
-                        选择并替换
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePendingImageUpload(e, img.originalPath)} />
-                      </label>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* 相对路径设置区 */}
-              <div className="pt-2 border-t border-yellow-500/20">
-                <p className="text-[11px] text-yellow-700/70 mb-2 leading-relaxed">
-                  提示：如果图片是相对路径 (如 markdown-img/xxx.png)，请在下方填写这些笔记在您电脑上的<b>根目录</b>：
-                </p>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      placeholder="例如: C:\Users\ASUS\Documents\Notes"
-                      value={localBaseDir}
-                      onChange={(e) => setLocalBaseDir(e.target.value)}
-                      className="h-8 text-xs bg-background/50 border-yellow-500/30 focus-visible:ring-yellow-500/30 pr-8"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleChooseFolder}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-600 hover:text-yellow-500"
-                      title="扫描笔记文件夹"
-                    >
-                      <FolderOpen size={14} />
-                    </button>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-700"
-                    onClick={async () => {
-                      // 优先使用句柄同步，如果没有句柄则回退到 Server Action 路径同步
-                      if (dirHandle) {
-                        await syncImagesWithHandle(dirHandle, pendingImages.filter(p => p.status !== 'done'));
-                        return;
-                      }
-
-                      const uniquePaths = pendingImages.filter(p => p.status !== 'done').map(p => p.originalPath);
-                      if (uniquePaths.length > 0) {
-                        try {
-                          setIsAutoSyncing(true);
-                          const syncedMapping = await syncLocalImages(uniquePaths, localBaseDir);
-                          let updatedContent = localContent;
-                          let hasChange = false;
-                          Object.keys(syncedMapping).forEach(oldPath => {
-                            const newUrl = syncedMapping[oldPath];
-                            updatedContent = replaceImagePath(updatedContent, oldPath, newUrl);
-                            hasChange = true;
-                          });
-                          if (hasChange) setLocalContent(updatedContent);
-                        } finally {
-                          setIsAutoSyncing(false);
-                        }
-                      }
-                    }}
-                  >
-                    {isAutoSyncing ? <Loader2 size={12} className="animate-spin mr-1" /> : null}
-                    立即开始全自动同步
-                  </Button>
-                </div>
-              </div>
+          {/* 右侧目录栏 - 仅在大屏幕显示，并支持吸顶，现已和正文框平齐 */}
+          <div className="hidden lg:block sticky top-24 self-start">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 align-top">
+              <TableOfContents content={tocContent} />
             </div>
-          )}
-
-          {isPreview ? (
-            <div className="p-6 bg-card border border-border rounded-xl shadow-sm min-h-125 animate-in fade-in duration-300">
-              <MarkdownRenderer content={localContent} />
-            </div>
-          ) : (
-            <Textarea
-              name="content"
-              value={localContent}
-              onChange={(e) => setLocalContent(e.target.value)}
-              placeholder="# 开始创作吧..."
-              className="min-h-125 font-mono leading-relaxed bg-card border-border focus-visible:ring-ring"
-              required
-            />
-          )}
-        </div>
-
-        <div className="flex gap-4 pt-6 border-t border-border">
-          <Button
-            type="submit"
-            disabled={isPending || isPreview}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 shadow-lg shadow-primary/20"
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="animate-spin mr-2" /> 处理中...
-              </>
-            ) : initialData ? (
-              "保存修改"
-            ) : (
-              "发布文章"
-            )}
-          </Button>
-          </div>
-        </div>
-
-        {/* 右侧目录栏 - 仅在大屏幕显示，并支持吸顶 */}
-        <div className="hidden lg:block sticky top-72 self-start">
-          <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 mt-24">
-             <TableOfContents content={debouncedContent} />
           </div>
         </div>
       </form>

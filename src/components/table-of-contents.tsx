@@ -42,7 +42,7 @@ export function TableOfContents({ content }: TableOfContentsProps) {
             };
 
             lines.forEach((line) => {
-                const match = line.match(/^(#{1,3})\s+(.+)$/);
+                const match = line.trim().match(/^(#{1,6})\s+(.+)$/);
                 if (match) {
                     const level = match[1].length;
                     const text = match[2].trim();
