@@ -68,9 +68,32 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
     const coverFile = formData.get("cover") as File;
     const slug = formData.get("slug") as string;
 
+    // 1. 获取旧数据用于图片对比
+    const { data: oldPost } = await supabase
+        .from("posts")
+        .select("content, cover_image")
+        .eq("id", id)
+        .single();
+
     let coverImageUrl: string | undefined;
     if (coverFile && coverFile.size > 0) {
+        // 如果有新封面，先上传新封面
         coverImageUrl = await uploadImage(coverFile, "cover");
+        // 删除旧封面
+        if (oldPost?.cover_image) {
+            await deleteImageFromUrl(oldPost.cover_image, supabase);
+        }
+    }
+
+    // 2. 正文图片对比清理
+    if (oldPost && oldPost.content !== content) {
+        const oldUrls = extractImageUrls(oldPost.content || "");
+        const newUrls = extractImageUrls(content || "");
+        // 找出已删除的图片引用
+        const discardedUrls = oldUrls.filter(url => !newUrls.includes(url));
+        if (discardedUrls.length > 0) {
+            await deleteImageFromUrl(discardedUrls, supabase);
+        }
     }
 
     const tags = tagsStr ? tagsStr.split(",").filter(Boolean) : [];
@@ -87,15 +110,6 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
     };
 
     if (coverImageUrl) {
-        // 删除旧封面图
-        const { data: oldPost } = await supabase
-            .from("posts")
-            .select("cover_image")
-            .eq("id", id)
-            .single();
-        if (oldPost?.cover_image) {
-            await deleteImageFromUrl(oldPost.cover_image, supabase);
-        }
         updateData.cover_image = coverImageUrl;
     }
 
@@ -116,7 +130,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
 export async function deletePost(id: string): Promise<void> {
     const supabase = await createClient();
 
-    // 1. 先获取文章信息以删除关联图片
+    // 1. 获取文章信息以删除关联图片
     const { data: post } = await supabase
         .from("posts")
         .select("content, cover_image")
@@ -124,14 +138,12 @@ export async function deletePost(id: string): Promise<void> {
         .single();
 
     if (post) {
-        // 删除封面图
-        if (post.cover_image) {
-            await deleteImageFromUrl(post.cover_image, supabase);
-        }
-        // 解析正文图片并删除
-        const imageUrls = extractImageUrls(post.content);
-        for (const url of imageUrls) {
-            await deleteImageFromUrl(url, supabase);
+        const imageUrls = extractImageUrls(post.content || "");
+        if (post.cover_image) imageUrls.push(post.cover_image);
+        
+        // 聚合后一次性删除，效率更高
+        if (imageUrls.length > 0) {
+            await deleteImageFromUrl(imageUrls, supabase);
         }
     }
 

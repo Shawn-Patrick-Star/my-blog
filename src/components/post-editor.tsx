@@ -684,7 +684,7 @@ export function PostEditor({
         </div>
 
         {/* 右侧目录栏 - 仅在大屏幕显示，并支持吸顶 */}
-        <div className="hidden lg:block sticky top-24 self-start">
+        <div className="hidden lg:block sticky top-72 self-start">
           <div className="bg-card text-card-foreground rounded-2xl shadow-sm border border-border p-6 mt-24">
              <TableOfContents content={debouncedContent} />
           </div>

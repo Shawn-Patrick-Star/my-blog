@@ -96,7 +96,7 @@ export default async function BlogPost({
                   />
                   返回笔记
                 </Link>
-
+    
                 {/* 目录组件 */}
                 <TableOfContents />
               </div>

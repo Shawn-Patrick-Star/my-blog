@@ -43,8 +43,8 @@ export async function updateMoment(formData: FormData): Promise<{ success: boole
 
     if (oldMoment?.images) {
         const removedImages = oldMoment.images.filter((img: string) => !existingImages.includes(img));
-        for (const imgUrl of removedImages) {
-            await deleteImageFromUrl(imgUrl, supabase);
+        if (removedImages.length > 0) {
+            await deleteImageFromUrl(removedImages, supabase);
         }
     }
 
@@ -73,9 +73,7 @@ export async function deleteMoment(id: string): Promise<void> {
         .single();
 
     if (moment?.images && moment.images.length > 0) {
-        for (const url of moment.images) {
-            await deleteImageFromUrl(url, supabase);
-        }
+        await deleteImageFromUrl(moment.images, supabase);
     }
 
     const { error } = await supabase.from("moments").delete().eq("id", id);

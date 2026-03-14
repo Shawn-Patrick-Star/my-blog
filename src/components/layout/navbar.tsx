@@ -23,10 +23,21 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     const isMouseInsideRef = useRef(false);
     const navRef = useRef<HTMLDivElement>(null);
 
-    // 监听滚动位置
+    // 监听滚动位置和顶部状态
     useEffect(() => {
         const handleScroll = () => {
-            if (!isMouseInsideRef.current) {
+            const atTop = window.scrollY < 10;
+            setIsAtTop(atTop);
+
+            // 如果在首页且在顶部，强制显示并清除隐藏计时器
+            if (pathname === "/" && atTop) {
+                setIsVisible(true);
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                    timeoutRef.current = null;
+                }
+            } else if (!isMouseInsideRef.current) {
+                // 否则（非首页或已滚动），如果鼠标不在内部，则启动隐藏计时器
                 startHideTimer();
             }
         };
@@ -34,13 +45,17 @@ export function Navbar({ initialUser }: { initialUser: any }) {
         const startHideTimer = () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => {
+                // 真正执行隐藏前做最终检查
+                if (pathname === "/" && window.scrollY < 10) return;
                 setIsVisible(false);
             }, 2000);
         };
 
         window.addEventListener('scroll', handleScroll);
+        // 初始化状态检查
+        handleScroll();
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [pathname]);
 
     const showNav = () => {
         isMouseInsideRef.current = true;
@@ -55,6 +70,8 @@ export function Navbar({ initialUser }: { initialUser: any }) {
         isMouseInsideRef.current = false;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         timeoutRef.current = setTimeout(() => {
+            // 首页顶部始终保持显示
+            if (pathname === "/" && window.scrollY < 10) return;
             setIsVisible(false);
         }, 2000);
     };
@@ -87,6 +104,8 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     useEffect(() => {
         setIsVisible(true);
         const timer = setTimeout(() => {
+            // 首页顶部不参与自动隐藏
+            if (pathname === "/" && window.scrollY < 10) return;
             if (!isMouseInsideRef.current) {
                 setIsVisible(false);
             }
@@ -102,7 +121,7 @@ export function Navbar({ initialUser }: { initialUser: any }) {
     }, []);
 
     return (
-        <div 
+        <div
             ref={navRef}
             className="fixed top-0 left-0 w-full z-50 group"
             onMouseEnter={showNav}
@@ -110,8 +129,8 @@ export function Navbar({ initialUser }: { initialUser: any }) {
         >
             <div className={cn(
                 "w-full px-4 flex justify-center transition-all duration-500 ease-out",
-                isVisible 
-                    ? "translate-y-0 opacity-100" 
+                isVisible
+                    ? "translate-y-0 opacity-100"
                     : "-translate-y-full opacity-0"
             )}>
                 <nav className="flex h-14 w-full max-w-4xl items-center justify-between rounded-full border border-border/50 bg-card backdrop-blur-xl px-6 shadow-lg transition-all duration-300">

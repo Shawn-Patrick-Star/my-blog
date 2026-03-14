@@ -48,42 +48,60 @@ export async function uploadBlob(
 }
 
 /**
- * 从 URL 中提取文件名并从存储中删除
- * @param url 图片的公开 URL
- * @param supabaseClient 可选，传递已认证的 supabase 客户端（如在 Server Actions 中使用）
+ * 助手函数：从 URL 中提取 Storage 的相对路径（文件名）
  */
-export async function deleteImageFromUrl(
-    url: string | null | undefined,
-    supabaseClient?: any
-) {
-    if (!url) return;
+export function getFilePathFromUrl(url: string | null | undefined): string | null {
+    if (!url || !url.includes(BUCKET_NAME)) return null;
     try {
-        const client = supabaseClient || supabase;
-        // Supabase URL 格式: .../storage/v1/object/public/public-images/FILENAME
-        const parts = url.split("/");
-        const fileName = parts[parts.length - 1];
-
-        if (fileName && fileName.includes("?")) {
-            // 处理带有查询参数的 URL
-            const cleanFileName = fileName.split("?")[0];
-            await client.storage.from(BUCKET_NAME).remove([cleanFileName]);
-        } else if (fileName) {
-            await client.storage.from(BUCKET_NAME).remove([fileName]);
-        }
+        // 分割并找到 bucket 名称后面的部分
+        const parts = url.split(`${BUCKET_NAME}/`);
+        if (parts.length < 2) return null;
+        // 去掉可能存在的查询参数
+        return parts[1].split('?')[0];
     } catch (e) {
-        console.error("Failed to delete image from storage:", e);
+        return null;
     }
 }
 
 /**
- * 从 Markdown 文本中提取所有图片 URL
+ * 从 URL 列表或单个 URL 中删除图片
  */
-export function extractImageUrls(markdown: string): string[] {
-    const urls: string[] = [];
-    const regex = /!\[.*?\]\((.*?)\)/g;
-    let match;
-    while ((match = regex.exec(markdown)) !== null) {
-        if (match[1]) urls.push(match[1]);
+export async function deleteImageFromUrl(
+    url: string | string[] | null | undefined,
+    supabaseClient?: any
+) {
+    if (!url) return;
+    const client = supabaseClient || supabase;
+    const urls = Array.isArray(url) ? url : [url];
+    
+    // 提取所有合法的文件路径
+    const filePaths = urls
+        .map(u => getFilePathFromUrl(u))
+        .filter((path): path is string => !!path);
+
+    if (filePaths.length > 0) {
+        try {
+            await client.storage.from(BUCKET_NAME).remove(filePaths);
+        } catch (e) {
+            console.error("Storage deletion failed:", e);
+        }
     }
-    return urls;
+}
+
+/**
+ * 强化的图片提取：支持 Markdown ![alt](url) 和 HTML <img src="url">
+ */
+export function extractImageUrls(content: string): string[] {
+    const urls: string[] = [];
+    if (!content) return urls;
+    
+    // 正则说明：1. Markdown 模式 2. HTML <img> 模式 
+    const regex = /!\[.*?\]\((.*?)\)|<img\s+[^>]*src=["'](.*?)["']/g;
+    
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+        const url = match[1] || match[2];
+        if (url) urls.push(url);
+    }
+    return Array.from(new Set(urls)); // 去重
 }

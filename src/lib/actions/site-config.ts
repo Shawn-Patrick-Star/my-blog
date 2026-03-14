@@ -1,18 +1,29 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { deleteImageFromUrl } from "@/lib/upload";
 
 /** 更新站点配置（首页背景图、标题等） */
 export async function updateSiteConfig(formData: FormData): Promise<void> {
+    const supabase = await createClient();
     const heroImageUrl = formData.get("hero_image_url") as string;
     const heroImages = formData.get("hero_images") as string; // JSON string
     const siteTitle = formData.get("site_title") as string;
     const siteQuotes = formData.get("site_quotes") as string; // JSON string
 
-    // 1. 旧图兼容 (单图)
+    // 1. 旧图兼容 (单图) 附带清理逻辑
     if (heroImageUrl) {
+        const { data: oldSingleConfig } = await supabase
+            .from("site_config")
+            .select("value")
+            .eq("key", "hero_image")
+            .single();
+        
+        if (oldSingleConfig?.value && oldSingleConfig.value !== heroImageUrl) {
+            await deleteImageFromUrl(oldSingleConfig.value, supabase);
+        }
+
         await supabase
             .from("site_config")
             .upsert({ key: "hero_image", value: heroImageUrl }, { onConflict: "key" });
@@ -32,8 +43,8 @@ export async function updateSiteConfig(formData: FormData): Promise<void> {
                 const newUrls: string[] = JSON.parse(heroImages);
                 // 找出被移除的图片
                 const removedUrls = oldUrls.filter(url => !newUrls.includes(url));
-                for (const url of removedUrls) {
-                    await deleteImageFromUrl(url);
+                if (removedUrls.length > 0) {
+                    await deleteImageFromUrl(removedUrls, supabase);
                 }
             }
         } catch (e) {
